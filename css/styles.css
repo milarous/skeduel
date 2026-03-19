@@ -1,0 +1,102 @@
+:root {
+    --bg-color: #ffffff;
+    --text-color: #333333;
+    --input-bg: #ffffff;
+    --input-border: #cccccc;
+    --button-bg: #f0f0f0;
+    --button-text: #333333;
+    --button-hover: #e0e0e0;
+    --delete-btn-bg: #ff4444;
+    --delete-btn-text: #ffffff;
+}
+
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #ffffff;
+    --input-bg: #1a1a1a;
+    --input-border: #333333;
+    --button-bg: #1a1a1a;
+    --button-text: #ffffff;
+    --button-hover: #2a2a2a;
+    --delete-btn-bg: #ff6666;
+    --delete-btn-text: #ffffff;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s;
+}
+.task-list {
+    list-style-type: none;
+    padding: 0;
+}
+.task-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.task-checkbox {
+    margin-right: 10px;
+    cursor: pointer;
+}
+.task-text {
+    margin-right: 10px;
+    text-decoration: none;
+}
+.task-text.completed {
+    text-decoration: line-through;
+}
+.delete-btn {
+    cursor: pointer;
+    background-color: var(--delete-btn-bg);
+    color: var(--delete-btn-text);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+.delete-btn:hover {
+    opacity: 0.8;
+}
+#new-task-input {
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--input-border);
+    padding: 8px;
+    border-radius: 4px;
+}
+.add-btn {
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--input-border);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+.add-btn:hover {
+    background-color: var(--button-hover);
+}
+.theme-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: 1px solid var(--input-border);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.theme-toggle:hover {
+    background-color: var(--button-hover);
+}
+.empty-message {
+    text-align: center;
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-top: 40px;
+    font-style: italic;
+}
