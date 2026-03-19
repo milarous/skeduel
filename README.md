@@ -33,6 +33,7 @@ Skeduel is a lightweight, browser-based task management application designed to 
 - ✅ **Local Storage** - Tasks persist across browser sessions
 - ✅ **Due Dates** - Optional due dates for tasks with calendar picker
 - ✅ **Overdue Highlighting** - Tasks past due date are highlighted in red
+- ✅ **Drag and Drop** - Reorder tasks by dragging them to a new position
 
 ## Demo
 

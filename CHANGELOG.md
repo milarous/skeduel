@@ -16,6 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Bug fixes
 
+## [1.2.0] - 2026-03-19
+
+### Added
+- Drag and drop functionality to reorder tasks
+- Visual drag handle indicator on hover
+- Touch event support for mobile drag and drop
+- Visual feedback during drag operations (opacity, scale, shadow)
+- Drop target indicator with blue border
+- Persistent task order saved to local storage
+
+### Changed
+- Enhanced task items with draggable attribute
+- Updated CSS with drag and drop styles for both light and dark themes
+
+### Fixed
+- N/A
+
 ## [1.1.0] - 2026-03-19
 
 ### Added
@@ -69,5 +86,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.2.0 | 2026-03-19 | Added drag and drop task reordering |
 | 1.1.0 | 2026-03-19 | Added due date functionality with overdue highlighting |
 | 1.0.0 | 2026-03-19 | Initial release |

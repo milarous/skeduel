@@ -1,5 +1,8 @@
 // Task management
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+let draggedItem = null;
+let touchStartY = 0;
+let touchStartX = 0;
 
 // DOM elements
 const taskList = document.getElementById('task-list');
@@ -118,6 +121,20 @@ function createTaskElement(task, index) {
     const li = document.createElement('li');
     li.className = 'task-item';
     li.setAttribute('data-task-id', task.id);
+    li.setAttribute('draggable', 'true');
+    
+    // Drag and drop event listeners
+    li.addEventListener('dragstart', handleDragStart);
+    li.addEventListener('dragend', handleDragEnd);
+    li.addEventListener('dragover', handleDragOver);
+    li.addEventListener('dragenter', handleDragEnter);
+    li.addEventListener('dragleave', handleDragLeave);
+    li.addEventListener('drop', handleDrop);
+    
+    // Touch event listeners for mobile
+    li.addEventListener('touchstart', handleTouchStart, { passive: false });
+    li.addEventListener('touchmove', handleTouchMove, { passive: false });
+    li.addEventListener('touchend', handleTouchEnd);
 
     // Check if task is overdue
     const isOverdue = task.dueDate && !task.completed && isTaskOverdue(task.dueDate);
@@ -308,6 +325,138 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Drag and drop handlers
+function handleDragStart(e) {
+    draggedItem = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    draggedItem = null;
+    
+    // Remove drag-over class from all items
+    document.querySelectorAll('.task-item').forEach(item => {
+        item.classList.remove('drag-over');
+    });
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    if (this !== draggedItem) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (this !== draggedItem) {
+        // Get the indices of the dragged and dropped items
+        const draggedId = parseInt(draggedItem.getAttribute('data-task-id'));
+        const droppedId = parseInt(this.getAttribute('data-task-id'));
+        
+        const draggedIndex = tasks.findIndex(t => t.id === draggedId);
+        const droppedIndex = tasks.findIndex(t => t.id === droppedId);
+        
+        if (draggedIndex !== -1 && droppedIndex !== -1) {
+            // Remove the dragged item from its original position
+            const [removed] = tasks.splice(draggedIndex, 1);
+            
+            // Insert it at the new position
+            tasks.splice(droppedIndex, 0, removed);
+            
+            // Save and re-render
+            saveTasks();
+            renderTasks();
+        }
+    }
+    
+    this.classList.remove('drag-over');
+}
+
+// Touch event handlers for mobile drag and drop
+function handleTouchStart(e) {
+    if (e.touches.length === 1) {
+        draggedItem = this;
+        touchStartY = e.touches[0].clientY;
+        touchStartX = e.touches[0].clientX;
+        this.classList.add('dragging');
+    }
+}
+
+function handleTouchMove(e) {
+    if (!draggedItem) return;
+    
+    e.preventDefault();
+    
+    const touchY = e.touches[0].clientY;
+    const touchX = e.touches[0].clientX;
+    
+    // Find the element under the touch point
+    const elementUnder = document.elementFromPoint(touchX, touchY);
+    const taskItem = elementUnder?.closest('.task-item');
+    
+    // Remove drag-over class from all items
+    document.querySelectorAll('.task-item').forEach(item => {
+        item.classList.remove('drag-over');
+    });
+    
+    // Add drag-over class to the item under the touch point
+    if (taskItem && taskItem !== draggedItem) {
+        taskItem.classList.add('drag-over');
+    }
+}
+
+function handleTouchEnd(e) {
+    if (!draggedItem) return;
+    
+    // Find the element under the final touch point
+    const touch = e.changedTouches[0];
+    const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
+    const taskItem = elementUnder?.closest('.task-item');
+    
+    if (taskItem && taskItem !== draggedItem) {
+        // Get the indices of the dragged and dropped items
+        const draggedId = parseInt(draggedItem.getAttribute('data-task-id'));
+        const droppedId = parseInt(taskItem.getAttribute('data-task-id'));
+        
+        const draggedIndex = tasks.findIndex(t => t.id === draggedId);
+        const droppedIndex = tasks.findIndex(t => t.id === droppedId);
+        
+        if (draggedIndex !== -1 && droppedIndex !== -1) {
+            // Remove the dragged item from its original position
+            const [removed] = tasks.splice(draggedIndex, 1);
+            
+            // Insert it at the new position
+            tasks.splice(droppedIndex, 0, removed);
+            
+            // Save and re-render
+            saveTasks();
+            renderTasks();
+        }
+    }
+    
+    // Clean up
+    draggedItem.classList.remove('dragging');
+    document.querySelectorAll('.task-item').forEach(item => {
+        item.classList.remove('drag-over');
+    });
+    draggedItem = null;
+}
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', init);

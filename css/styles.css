@@ -546,3 +546,58 @@ input:focus-visible {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Drag and drop styles */
+.task-item {
+    cursor: grab;
+}
+
+.task-item:active {
+    cursor: grabbing;
+}
+
+.task-item.dragging {
+    opacity: 0.5;
+    background-color: var(--bg-tertiary);
+    transform: scale(1.02);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+}
+
+.task-item.drag-over {
+    border-top: 3px solid var(--accent-primary);
+    background-color: var(--bg-tertiary);
+}
+
+/* Visual indicator for drag handle */
+.task-item::before {
+    content: '⋮⋮';
+    position: absolute;
+    left: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.task-item {
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.task-item:hover::before {
+    opacity: 1;
+}
+
+/* Dark theme drag and drop styles */
+[data-theme="dark"] .task-item.dragging {
+    background-color: var(--bg-tertiary);
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .task-item.drag-over {
+    border-top-color: var(--accent-primary);
+    background-color: var(--bg-tertiary);
+}
