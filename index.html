@@ -3,19 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo List</title>
+    <title>Skeduel - Task Manager</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1 class="app-title">Skeduel</h1>
+            <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span>
+                <span class="theme-text">Dark Mode</span>
+            </button>
+        </header>
 
-<button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
-<h1>Skeduel</h1>
-<input type="text" id="new-task-input" placeholder="Add a new task">
-<button class="add-btn" onclick="addTask()">Add Task</button>
-<ul class="task-list"></ul>
-<div class="empty-message" id="empty-message">No tasks yet! Add your first task to get started.</div>
+        <main class="main-content">
+            <div class="input-section">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="new-task-input" 
+                        placeholder="What needs to be done?" 
+                        aria-label="New task input"
+                    >
+                    <button class="add-btn" onclick="addTask()" aria-label="Add task">
+                        <span class="add-icon">+</span>
+                        <span class="add-text">Add Task</span>
+                    </button>
+                </div>
+            </div>
 
-<script src="js/app.js" defer></script>
+            <div class="tasks-section">
+                <div class="tasks-header">
+                    <span class="task-count" id="task-count">0 tasks</span>
+                    <button class="clear-completed-btn" onclick="clearCompleted()" id="clear-completed" style="display: none;">
+                        Clear Completed
+                    </button>
+                </div>
+                <ul class="task-list" id="task-list"></ul>
+                <div class="empty-state" id="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <h3 class="empty-title">No tasks yet!</h3>
+                    <p class="empty-description">Add your first task to get started with your productivity journey.</p>
+                </div>
+            </div>
+        </main>
 
+        <footer class="app-footer">
+            <p>Stay organized, stay productive ✨</p>
+        </footer>
+    </div>
+
+    <script src="js/app.js" defer></script>
 </body>
 </html>
