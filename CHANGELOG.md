@@ -16,6 +16,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Bug fixes
 
+## [1.1.0] - 2026-03-19
+
+### Added
+- Optional due date field for tasks
+- Visual due date display with calendar icon
+- Automatic overdue detection for tasks past their due date
+- Red highlighting for overdue tasks (background and left border)
+- Overdue styling support for both light and dark themes
+- Responsive due date input for mobile devices
+
+### Changed
+- Updated task input section to include due date picker
+- Enhanced task rendering to display due dates
+- Improved task item layout with content container
+
+### Fixed
+- N/A
+
 ## [1.0.0] - 2026-03-19
 
 ### Added
@@ -51,4 +69,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.1.0 | 2026-03-19 | Added due date functionality with overdue highlighting |
 | 1.0.0 | 2026-03-19 | Initial release |

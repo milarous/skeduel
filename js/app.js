@@ -7,6 +7,7 @@ const emptyState = document.getElementById('empty-state');
 const taskCount = document.getElementById('task-count');
 const clearCompletedBtn = document.getElementById('clear-completed');
 const newTaskInput = document.getElementById('new-task-input');
+const dueDateInput = document.getElementById('due-date-input');
 
 // Initialize the application
 function init() {
@@ -61,7 +62,8 @@ function addTask() {
         id: Date.now(),
         text: text,
         completed: false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        dueDate: dueDateInput.value || null
     };
 
     tasks.unshift(newTask); // Add to beginning of array
@@ -70,6 +72,7 @@ function addTask() {
     
     // Clear input and focus
     newTaskInput.value = '';
+    dueDateInput.value = '';
     newTaskInput.focus();
 
     // Add success animation
@@ -116,6 +119,12 @@ function createTaskElement(task, index) {
     li.className = 'task-item';
     li.setAttribute('data-task-id', task.id);
 
+    // Check if task is overdue
+    const isOverdue = task.dueDate && !task.completed && isTaskOverdue(task.dueDate);
+    if (isOverdue) {
+        li.classList.add('overdue');
+    }
+
     // Checkbox
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -124,12 +133,30 @@ function createTaskElement(task, index) {
     checkbox.setAttribute('aria-label', `Mark "${task.text}" as ${task.completed ? 'incomplete' : 'complete'}`);
     checkbox.onchange = () => toggleTask(task.id);
 
+    // Task content container
+    const taskContent = document.createElement('div');
+    taskContent.className = 'task-content';
+
     // Task text
     const span = document.createElement('span');
     span.textContent = task.text;
     span.className = 'task-text';
     if (task.completed) {
         span.classList.add('completed');
+    }
+
+    // Due date display
+    if (task.dueDate) {
+        const dueDateSpan = document.createElement('span');
+        dueDateSpan.className = 'due-date';
+        if (isOverdue) {
+            dueDateSpan.classList.add('overdue');
+        }
+        dueDateSpan.textContent = formatDate(task.dueDate);
+        taskContent.appendChild(span);
+        taskContent.appendChild(dueDateSpan);
+    } else {
+        taskContent.appendChild(span);
     }
 
     // Delete button
@@ -141,10 +168,30 @@ function createTaskElement(task, index) {
 
     // Assemble the task item
     li.appendChild(checkbox);
-    li.appendChild(span);
+    li.appendChild(taskContent);
     li.appendChild(deleteBtn);
 
     return li;
+}
+
+// Check if a task is overdue
+function isTaskOverdue(dueDate) {
+    if (!dueDate) return false;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+    
+    return due < today;
+}
+
+// Format date for display
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const options = { month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
 }
 
 // Toggle task completion

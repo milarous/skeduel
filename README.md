@@ -31,6 +31,8 @@ Skeduel is a lightweight, browser-based task management application designed to 
 - ✅ **Task Counter** - Real-time count of remaining tasks
 - ✅ **Responsive Design** - Works seamlessly on desktop and mobile devices
 - ✅ **Local Storage** - Tasks persist across browser sessions
+- ✅ **Due Dates** - Optional due dates for tasks with calendar picker
+- ✅ **Overdue Highlighting** - Tasks past due date are highlighted in red
 
 ## Demo
 
@@ -70,9 +72,12 @@ Open `index.html` in your browser to see Skeduel in action.
 ## Usage
 
 1. **Adding a Task**: Type your task in the input field and click "Add Task" or press Enter
-2. **Completing a Task**: Click on a task to mark it as complete
-3. **Clearing Tasks**: Click "Clear Completed" to remove all finished tasks
-4. **Dark Mode**: Click the theme toggle button to switch between light and dark modes
+2. **Setting a Due Date**: Use the date picker to optionally set a due date for your task
+3. **Completing a Task**: Click on a task to mark it as complete
+4. **Viewing Due Dates**: Tasks with due dates display the date below the task text
+5. **Overdue Tasks**: Tasks past their due date are highlighted in red for easy identification
+6. **Clearing Tasks**: Click "Clear Completed" to remove all finished tasks
+7. **Dark Mode**: Click the theme toggle button to switch between light and dark modes
 
 ## Technologies
 

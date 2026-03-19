@@ -153,6 +153,35 @@ body {
     box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
 }
 
+/* Due date input */
+.due-date-input {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 400;
+    transition: all var(--transition-fast);
+    outline: none;
+    min-width: 140px;
+}
+
+.due-date-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
+}
+
+.due-date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+}
+
+.due-date-input::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
 /* Add button */
 .add-btn {
     display: flex;
@@ -286,9 +315,16 @@ body {
     box-shadow: 0 0 0 3px rgb(59 130 246 / 0.1);
 }
 
+/* Task content container */
+.task-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
 /* Task text */
 .task-text {
-    flex: 1;
     font-size: 1rem;
     color: var(--text-primary);
     transition: all var(--transition-fast);
@@ -298,6 +334,49 @@ body {
 .task-text.completed {
     text-decoration: line-through;
     color: var(--text-muted);
+}
+
+/* Due date display */
+.due-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.due-date::before {
+    content: '📅';
+    font-size: 0.625rem;
+}
+
+.due-date.overdue {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .due-date.overdue {
+    color: #f87171;
+}
+
+/* Overdue task styling */
+.task-item.overdue {
+    background-color: #fef2f2;
+    border-left: 3px solid #dc2626;
+}
+
+.task-item.overdue:hover {
+    background-color: #fee2e2;
+}
+
+[data-theme="dark"] .task-item.overdue {
+    background-color: rgba(220, 38, 38, 0.1);
+    border-left-color: #f87171;
+}
+
+[data-theme="dark"] .task-item.overdue:hover {
+    background-color: rgba(220, 38, 38, 0.2);
 }
 
 /* Delete button */
@@ -398,6 +477,10 @@ body {
     .input-wrapper {
         flex-direction: column;
         padding: 0.75rem;
+    }
+    
+    .due-date-input {
+        min-width: 100%;
     }
     
     .add-btn {
