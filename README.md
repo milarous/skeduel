@@ -34,6 +34,10 @@ Skeduel is a lightweight, browser-based task management application designed to 
 - ✅ **Due Dates** - Optional due dates for tasks with calendar picker
 - ✅ **Overdue Highlighting** - Tasks past due date are highlighted in red
 - ✅ **Drag and Drop** - Reorder tasks by dragging them to a new position
+- ✅ **Sort by Due Date** - Tasks can be sorted by due date with visual grouping
+- ✅ **Date Headers** - Tasks are grouped under date headers (Today, Tomorrow, specific dates)
+- ✅ **Collapsible Groups** - Date sections can be expanded/collapsed
+- ✅ **Automatic Manual Mode** - Drag-and-drop automatically switches to manual sorting
 
 ## Demo
 
@@ -79,6 +83,9 @@ Open `index.html` in your browser to see Skeduel in action.
 5. **Overdue Tasks**: Tasks past their due date are highlighted in red for easy identification
 6. **Clearing Tasks**: Click "Clear Completed" to remove all finished tasks
 7. **Dark Mode**: Click the theme toggle button to switch between light and dark modes
+8. **Sorting Tasks**: Use the dropdown to sort tasks by due date or manually
+9. **Date Groups**: Tasks are grouped by due date with collapsible sections
+10. **Manual Reordering**: Drag and drop tasks to reorder them manually
 
 ## Technologies
 

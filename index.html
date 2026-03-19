@@ -41,6 +41,13 @@
             <div class="tasks-section">
                 <div class="tasks-header">
                     <span class="task-count" id="task-count">0 tasks</span>
+                    <div class="sorting-controls">
+                        <label for="sort-select" class="sort-label">Sort by:</label>
+                        <select id="sort-select" class="sort-select" onchange="handleSortChange()">
+                            <option value="dueDate">Due Date</option>
+                            <option value="manual">Manual</option>
+                        </select>
+                    </div>
                     <button class="clear-completed-btn" onclick="clearCompleted()" id="clear-completed" style="display: none;">
                         Clear Completed
                     </button>

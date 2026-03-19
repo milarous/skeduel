@@ -3,6 +3,8 @@ let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 let draggedItem = null;
 let touchStartY = 0;
 let touchStartX = 0;
+let currentSortingMode = localStorage.getItem('sortingMode') || 'dueDate';
+let collapsedGroups = JSON.parse(localStorage.getItem('collapsedGroups')) || {};
 
 // DOM elements
 const taskList = document.getElementById('task-list');
@@ -15,8 +17,121 @@ const dueDateInput = document.getElementById('due-date-input');
 // Initialize the application
 function init() {
     applyTheme();
+    updateSortSelect();
     renderTasks();
     setupEventListeners();
+}
+
+// Update sort select to match current mode
+function updateSortSelect() {
+    const sortSelect = document.getElementById('sort-select');
+    if (sortSelect) {
+        sortSelect.value = currentSortingMode;
+    }
+}
+
+// Handle sort change
+function handleSortChange() {
+    const sortSelect = document.getElementById('sort-select');
+    currentSortingMode = sortSelect.value;
+    localStorage.setItem('sortingMode', currentSortingMode);
+    renderTasks();
+}
+
+// Sort tasks by due date
+function sortByDueDate(tasksToSort) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return [...tasksToSort].sort((a, b) => {
+        // Tasks without due dates go to the end
+        if (!a.dueDate && !b.dueDate) {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        }
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        
+        // Sort by due date (earliest first)
+        const dateA = new Date(a.dueDate);
+        const dateB = new Date(b.dueDate);
+        dateA.setHours(0, 0, 0, 0);
+        dateB.setHours(0, 0, 0, 0);
+        
+        return dateA - dateB;
+    });
+}
+
+// Group tasks by due date
+function groupTasksByDate(tasksToGroup) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const groups = {
+        overdue: [],
+        today: [],
+        future: {},
+        noDate: []
+    };
+    
+    tasksToGroup.forEach(task => {
+        if (!task.dueDate) {
+            groups.noDate.push(task);
+            return;
+        }
+        
+        const dueDate = new Date(task.dueDate);
+        dueDate.setHours(0, 0, 0, 0);
+        
+        if (dueDate < today) {
+            groups.overdue.push(task);
+        } else if (dueDate.getTime() === today.getTime()) {
+            groups.today.push(task);
+        } else {
+            const dateKey = task.dueDate;
+            if (!groups.future[dateKey]) {
+                groups.future[dateKey] = [];
+            }
+            groups.future[dateKey].push(task);
+        }
+    });
+    
+    return groups;
+}
+
+// Format date for header
+function formatDateHeader(dateString) {
+    const date = new Date(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+    
+    if (dateOnly.getTime() === tomorrow.getTime()) {
+        return 'Tomorrow';
+    }
+    
+    const options = { weekday: 'long', month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+}
+
+// Toggle group collapse
+function toggleGroupCollapse(groupId) {
+    collapsedGroups[groupId] = !collapsedGroups[groupId];
+    localStorage.setItem('collapsedGroups', JSON.stringify(collapsedGroups));
+    
+    const group = document.getElementById(groupId);
+    const header = document.querySelector(`[data-group-id="${groupId}"]`);
+    
+    if (group) {
+        group.classList.toggle('collapsed', collapsedGroups[groupId]);
+    }
+    if (header) {
+        header.classList.toggle('collapsed', collapsedGroups[groupId]);
+    }
 }
 
 // Setup event listeners
@@ -109,11 +224,142 @@ function renderTasks() {
     // Show/hide clear completed button
     clearCompletedBtn.style.display = completedTasks > 0 ? 'block' : 'none';
 
-    // Render each task
+    // Render based on sorting mode
+    if (currentSortingMode === 'dueDate') {
+        renderGroupedByDate();
+    } else {
+        renderFlatList();
+    }
+}
+
+// Render tasks in flat list (manual sorting)
+function renderFlatList() {
     tasks.forEach((task, index) => {
         const taskElement = createTaskElement(task, index);
         taskList.appendChild(taskElement);
     });
+}
+
+// Render tasks grouped by date
+function renderGroupedByDate() {
+    const sortedTasks = sortByDueDate(tasks);
+    const groups = groupTasksByDate(sortedTasks);
+    
+    // Render overdue tasks (always visible)
+    if (groups.overdue.length > 0) {
+        const groupId = 'overdue';
+        const isCollapsed = collapsedGroups[groupId] || false;
+        
+        // Create header
+        const header = createDateHeader('Overdue', groups.overdue.length, groupId, isCollapsed, true);
+        taskList.appendChild(header);
+        
+        // Create group container
+        const groupContainer = document.createElement('div');
+        groupContainer.className = `task-group ${isCollapsed ? 'collapsed' : ''}`;
+        groupContainer.id = groupId;
+        
+        groups.overdue.forEach(task => {
+            const taskElement = createTaskElement(task);
+            groupContainer.appendChild(taskElement);
+        });
+        
+        taskList.appendChild(groupContainer);
+    }
+    
+    // Render today's tasks (always visible)
+    if (groups.today.length > 0) {
+        const groupId = 'today';
+        const isCollapsed = collapsedGroups[groupId] || false;
+        
+        // Create header
+        const header = createDateHeader('Today', groups.today.length, groupId, isCollapsed, false, true);
+        taskList.appendChild(header);
+        
+        // Create group container
+        const groupContainer = document.createElement('div');
+        groupContainer.className = `task-group ${isCollapsed ? 'collapsed' : ''}`;
+        groupContainer.id = groupId;
+        
+        groups.today.forEach(task => {
+            const taskElement = createTaskElement(task);
+            groupContainer.appendChild(taskElement);
+        });
+        
+        taskList.appendChild(groupContainer);
+    }
+    
+    // Render future tasks by date
+    const futureDates = Object.keys(groups.future).sort();
+    futureDates.forEach(dateKey => {
+        const tasksForDate = groups.future[dateKey];
+        const groupId = `date-${dateKey}`;
+        const isCollapsed = collapsedGroups[groupId] || false;
+        
+        // Create header
+        const header = createDateHeader(formatDateHeader(dateKey), tasksForDate.length, groupId, isCollapsed);
+        taskList.appendChild(header);
+        
+        // Create group container
+        const groupContainer = document.createElement('div');
+        groupContainer.className = `task-group ${isCollapsed ? 'collapsed' : ''}`;
+        groupContainer.id = groupId;
+        
+        tasksForDate.forEach(task => {
+            const taskElement = createTaskElement(task);
+            groupContainer.appendChild(taskElement);
+        });
+        
+        taskList.appendChild(groupContainer);
+    });
+    
+    // Render tasks without due dates
+    if (groups.noDate.length > 0) {
+        const groupId = 'no-date';
+        const isCollapsed = collapsedGroups[groupId] || false;
+        
+        // Create header
+        const header = createDateHeader('No Due Date', groups.noDate.length, groupId, isCollapsed);
+        taskList.appendChild(header);
+        
+        // Create group container
+        const groupContainer = document.createElement('div');
+        groupContainer.className = `task-group ${isCollapsed ? 'collapsed' : ''}`;
+        groupContainer.id = groupId;
+        
+        groups.noDate.forEach(task => {
+            const taskElement = createTaskElement(task);
+            groupContainer.appendChild(taskElement);
+        });
+        
+        taskList.appendChild(groupContainer);
+    }
+}
+
+// Create date header element
+function createDateHeader(title, count, groupId, isCollapsed = false, isOverdue = false, isToday = false) {
+    const header = document.createElement('div');
+    header.className = `date-header ${isCollapsed ? 'collapsed' : ''} ${isOverdue ? 'overdue' : ''} ${isToday ? 'today' : ''}`;
+    header.setAttribute('data-group-id', groupId);
+    header.onclick = () => toggleGroupCollapse(groupId);
+    
+    const titleSpan = document.createElement('span');
+    titleSpan.className = 'date-header-title';
+    titleSpan.textContent = title;
+    
+    const countSpan = document.createElement('span');
+    countSpan.className = 'date-header-count';
+    countSpan.textContent = `${count} task${count !== 1 ? 's' : ''}`;
+    
+    const iconSpan = document.createElement('span');
+    iconSpan.className = 'date-header-icon';
+    iconSpan.textContent = '▼';
+    
+    header.appendChild(titleSpan);
+    header.appendChild(countSpan);
+    header.appendChild(iconSpan);
+    
+    return header;
 }
 
 // Create a task element
@@ -379,6 +625,11 @@ function handleDrop(e) {
             // Insert it at the new position
             tasks.splice(droppedIndex, 0, removed);
             
+            // Switch to manual sorting mode
+            currentSortingMode = 'manual';
+            localStorage.setItem('sortingMode', currentSortingMode);
+            updateSortSelect();
+            
             // Save and re-render
             saveTasks();
             renderTasks();
@@ -443,6 +694,11 @@ function handleTouchEnd(e) {
             
             // Insert it at the new position
             tasks.splice(droppedIndex, 0, removed);
+            
+            // Switch to manual sorting mode
+            currentSortingMode = 'manual';
+            localStorage.setItem('sortingMode', currentSortingMode);
+            updateSortSelect();
             
             // Save and re-render
             saveTasks();

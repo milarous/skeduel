@@ -20,11 +20,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Drag and drop functionality to reorder tasks
+- Sorting dropdown for due date/manual sorting
+- Date headers with collapsible sections
+- Overdue tasks always visible
+- Automatic switch to manual mode on drag-and-drop
+- Persistent task order saved to local storage
+- Persistent collapse state saved to local storage
+- Persistent sorting mode saved to local storage
 - Visual drag handle indicator on hover
 - Touch event support for mobile drag and drop
 - Visual feedback during drag operations (opacity, scale, shadow)
 - Drop target indicator with blue border
-- Persistent task order saved to local storage
 
 ### Changed
 - Enhanced task items with draggable attribute
@@ -86,6 +92,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
-| 1.2.0 | 2026-03-19 | Added drag and drop task reordering |
+| 1.2.0 | 2026-03-19 | Added drag and drop task reordering with sorting functionality |
 | 1.1.0 | 2026-03-19 | Added due date functionality with overdue highlighting |
 | 1.0.0 | 2026-03-19 | Initial release |
