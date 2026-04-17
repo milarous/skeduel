@@ -16,6 +16,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Bug fixes
 
+## [1.3.0] - 2026-04-17
+
+### Added
+- Task editing functionality - edit task text and due date inline
+- Edit button (✎) appears on task hover
+- Save (✓) and cancel (×) buttons in edit mode
+- Keyboard support: Enter to save, Escape to cancel
+- New dark mode color scheme with indigo accent (#818cf8)
+- Larger buttons (2.25rem) with glow effects on hover
+- Task count centering in date headers
+- `--success` and `--danger` CSS custom properties
+
+### Changed
+- Dark mode is now the exclusive theme - light mode removed
+- Theme toggle button removed from header
+- Accent color changed from blue to indigo for modern look
+- Focus rings updated to use indigo glow
+- Task count now absolutely centered in date headers regardless of title length
+
+### Fixed
+- N/A
+
 ## [1.2.0] - 2026-03-19
 
 ### Added
@@ -92,6 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.3.0 | 2026-04-17 | Added task editing, dark mode only, optimized colors |
 | 1.2.0 | 2026-03-19 | Added drag and drop task reordering with sorting functionality |
 | 1.1.0 | 2026-03-19 | Added due date functionality with overdue highlighting |
 | 1.0.0 | 2026-03-19 | Initial release |

@@ -16,7 +16,7 @@ const dueDateInput = document.getElementById('due-date-input');
 
 // Initialize the application
 function init() {
-    applyTheme();
+    localStorage.removeItem('theme');
     updateSortSelect();
     renderTasks();
     setupEventListeners();
@@ -422,17 +422,37 @@ function createTaskElement(task, index) {
         taskContent.appendChild(span);
     }
 
+    // Task actions container
+    const taskActions = document.createElement('div');
+    taskActions.className = 'task-actions';
+
+    // Edit button
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn';
+    editBtn.innerHTML = '&#9998;';
+    editBtn.setAttribute('aria-label', `Edit task "${task.text}"`);
+    editBtn.onclick = (e) => {
+        e.stopPropagation();
+        editTask(task.id);
+    };
+
     // Delete button
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-btn';
     deleteBtn.innerHTML = '×';
     deleteBtn.setAttribute('aria-label', `Delete task "${task.text}"`);
-    deleteBtn.onclick = () => deleteTask(task.id);
+    deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteTask(task.id);
+    };
+
+    taskActions.appendChild(editBtn);
+    taskActions.appendChild(deleteBtn);
 
     // Assemble the task item
     li.appendChild(checkbox);
     li.appendChild(taskContent);
-    li.appendChild(deleteBtn);
+    li.appendChild(taskActions);
 
     return li;
 }
@@ -470,17 +490,145 @@ function toggleTask(taskId) {
 // Delete a task
 function deleteTask(taskId) {
     const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
-    
+
     if (taskElement) {
         // Add delete animation
         taskElement.style.animation = 'fadeOut 0.3s ease';
-        
+
         setTimeout(() => {
             tasks = tasks.filter(t => t.id !== taskId);
             saveTasks();
             renderTasks();
         }, 300);
     }
+}
+
+// Edit a task
+function editTask(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (!taskElement) return;
+
+    taskElement.setAttribute('draggable', 'false');
+    taskElement.classList.add('editing-mode');
+
+    const taskContent = taskElement.querySelector('.task-content');
+    taskContent.classList.add('editing');
+
+    const textSpan = taskContent.querySelector('.task-text');
+    const dueDateSpan = taskContent.querySelector('.due-date');
+
+    const originalText = task.text;
+    const originalDueDate = task.dueDate || '';
+
+    if (textSpan) {
+        textSpan.replaceWith(createEditInput('text', originalText));
+    }
+
+    if (dueDateSpan) {
+        dueDateSpan.replaceWith(createEditInput('dueDate', originalDueDate));
+    } else {
+        const emptyDueDate = document.createElement('span');
+        emptyDueDate.className = 'due-date-edit-wrapper';
+        emptyDueDate.appendChild(createEditInput('dueDate', originalDueDate));
+        taskContent.appendChild(emptyDueDate);
+    }
+
+    const actionsContainer = taskElement.querySelector('.task-actions');
+    actionsContainer.innerHTML = '';
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-btn';
+    saveBtn.innerHTML = '&#10003;';
+    saveBtn.setAttribute('aria-label', 'Save changes');
+    saveBtn.onclick = (e) => {
+        e.stopPropagation();
+        saveTaskEdit(taskId);
+    };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'cancel-btn';
+    cancelBtn.innerHTML = '&#10005;';
+    cancelBtn.setAttribute('aria-label', 'Cancel editing');
+    cancelBtn.onclick = (e) => {
+        e.stopPropagation();
+        task.text = originalText;
+        task.dueDate = originalDueDate || null;
+        renderTasks();
+    };
+
+    actionsContainer.appendChild(saveBtn);
+    actionsContainer.appendChild(cancelBtn);
+}
+
+function createEditInput(type, value) {
+    if (type === 'text') {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'edit-input';
+        input.value = value;
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const taskId = parseInt(input.closest('.task-item').getAttribute('data-task-id'));
+                saveTaskEdit(taskId);
+            } else if (e.key === 'Escape') {
+                renderTasks();
+            }
+        });
+        return input;
+    } else {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'edit-due-date-wrapper';
+
+        const input = document.createElement('input');
+        input.type = 'date';
+        input.className = 'edit-due-date-input';
+        input.value = value;
+        wrapper.appendChild(input);
+        return wrapper;
+    }
+}
+
+function saveTaskEdit(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+    if (!taskElement) return;
+
+    const editInput = taskElement.querySelector('.edit-input');
+    const editDueDateInput = taskElement.querySelector('.edit-due-date-input');
+
+    const newText = editInput ? editInput.value.trim() : task.text;
+    const newDueDate = editDueDateInput ? editDueDateInput.value || null : task.dueDate;
+
+    if (!newText) {
+        if (editInput) {
+            editInput.style.borderColor = '#ef4444';
+            setTimeout(() => {
+                editInput.style.borderColor = '';
+            }, 1000);
+        }
+        return;
+    }
+
+    const isDuplicate = tasks.some(t =>
+        t.id !== taskId &&
+        t.text.toLowerCase() === newText.toLowerCase()
+    );
+
+    if (isDuplicate) {
+        alert('This task already exists!');
+        return;
+    }
+
+    task.text = newText;
+    task.dueDate = newDueDate;
+
+    saveTasks();
+    renderTasks();
 }
 
 // Clear all completed tasks
@@ -513,47 +661,6 @@ function clearCompleted() {
 // Save tasks to localStorage
 function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
-}
-
-// Theme management
-function toggleTheme() {
-    const html = document.documentElement;
-    const themeToggle = document.querySelector('.theme-toggle');
-    const themeIcon = themeToggle.querySelector('.theme-icon');
-    const themeText = themeToggle.querySelector('.theme-text');
-    
-    if (html.getAttribute('data-theme') === 'dark') {
-        html.removeAttribute('data-theme');
-        themeIcon.textContent = '🌙';
-        themeText.textContent = 'Dark Mode';
-        localStorage.setItem('theme', 'light');
-    } else {
-        html.setAttribute('data-theme', 'dark');
-        themeIcon.textContent = '☀️';
-        themeText.textContent = 'Light Mode';
-        localStorage.setItem('theme', 'dark');
-    }
-}
-
-function applyTheme() {
-    const savedTheme = localStorage.getItem('theme');
-    const themeToggle = document.querySelector('.theme-toggle');
-    const themeIcon = themeToggle.querySelector('.theme-icon');
-    const themeText = themeToggle.querySelector('.theme-text');
-    
-    if (savedTheme === 'light') {
-        document.documentElement.removeAttribute('data-theme');
-        themeIcon.textContent = '🌙';
-        themeText.textContent = 'Dark Mode';
-    } else {
-        // Default to dark mode if no preference
-        document.documentElement.setAttribute('data-theme', 'dark');
-        themeIcon.textContent = '☀️';
-        themeText.textContent = 'Light Mode';
-        if (!savedTheme) {
-            localStorage.setItem('theme', 'dark');
-        }
-    }
 }
 
 // Add CSS for fadeOut animation
