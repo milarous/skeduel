@@ -34,11 +34,10 @@ Skeduel is a lightweight, browser-based task management application designed to 
 - ✅ **Due Dates** - Optional due dates for tasks with calendar picker
 - ✅ **Edit Tasks** - Edit task text and due date by clicking the edit button
 - ✅ **Overdue Highlighting** - Tasks past due date are highlighted
-- ✅ **Drag and Drop** - Reorder tasks by dragging them to a new position
-- ✅ **Sort by Due Date** - Tasks can be sorted by due date with visual grouping
 - ✅ **Date Headers** - Tasks are grouped under date headers (Today, Tomorrow, specific dates)
 - ✅ **Collapsible Groups** - Date sections can be expanded/collapsed
-- ✅ **Automatic Manual Mode** - Drag-and-drop automatically switches to manual sorting
+- ✅ **Task Recurring** - Set tasks to recur daily, weekly, monthly, or yearly with customizable intervals
+- ✅ **Recurrence Expiry** - Set tasks to expire after a specific date or number of completions
 
 ## Demo
 
@@ -85,9 +84,11 @@ Open `index.html` in your browser to see Skeduel in action.
 6. **Viewing Due Dates**: Tasks with due dates display the date below the task text
 7. **Overdue Tasks**: Tasks past their due date are highlighted for easy identification
 8. **Clearing Tasks**: Click "Clear Completed" to remove all finished tasks
-9. **Sorting Tasks**: Use the dropdown to sort tasks by due date or manually
-10. **Date Groups**: Tasks are grouped by due date with collapsible sections
-11. **Manual Reordering**: Drag and drop tasks to reorder them manually
+9. **Date Groups**: Tasks are grouped by due date with collapsible sections
+10. **Recurring Tasks**: Click "Repeat" to set a task to recur daily, weekly, monthly, or yearly
+11. **Recurrence Interval**: Set how often the task repeats (e.g., every 2 weeks)
+12. **Recurrence Expiry**: Set when the recurrence ends - "Never", "On date", or "After X times"
+13. **Editing Recurrence**: Click the edit button on a recurring task to modify its recurrence settings
 
 ## Technologies
 

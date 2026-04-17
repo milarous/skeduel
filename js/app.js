@@ -1,10 +1,79 @@
 // Task management
 let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-let draggedItem = null;
-let touchStartY = 0;
-let touchStartX = 0;
-let currentSortingMode = localStorage.getItem('sortingMode') || 'dueDate';
 let collapsedGroups = JSON.parse(localStorage.getItem('collapsedGroups')) || {};
+
+// Recurrence Engine - data model and helper functions
+const RecurrenceEngine = {
+    calculateNextInstance(task) {
+        if (!task.recurrence || !task.recurrence.enabled) return null;
+        const { frequency, interval, startDate, currentInstance } = task.recurrence;
+        const baseDate = new Date(startDate || task.dueDate || task.createdAt);
+        baseDate.setHours(0, 0, 0, 0);
+        const instance = currentInstance || 1;
+        switch (frequency) {
+            case 'daily':
+                baseDate.setDate(baseDate.getDate() + (interval * (instance - 1)));
+                break;
+            case 'weekly':
+                baseDate.setDate(baseDate.getDate() + (interval * 7 * (instance - 1)));
+                break;
+            case 'monthly':
+                baseDate.setMonth(baseDate.getMonth() + (interval * (instance - 1)));
+                break;
+            case 'yearly':
+                baseDate.setFullYear(baseDate.getFullYear() + (interval * (instance - 1)));
+                break;
+        }
+        return baseDate.toISOString().split('T')[0];
+    },
+    isExpired(task) {
+        if (!task.recurrence || !task.recurrence.enabled) return false;
+        const { expiryType, expiryDate, expiryCount, currentInstance } = task.recurrence;
+        if (expiryType === 'date') {
+            if (!expiryDate) return false;
+            const nextInstance = currentInstance + 1;
+            const baseDate = new Date(task.recurrence.startDate || task.dueDate || task.createdAt);
+            baseDate.setHours(0, 0, 0, 0);
+            switch (task.recurrence.frequency) {
+                case 'daily':
+                    baseDate.setDate(baseDate.getDate() + (task.recurrence.interval * (nextInstance - 1)));
+                    break;
+                case 'weekly':
+                    baseDate.setDate(baseDate.getDate() + (task.recurrence.interval * 7 * (nextInstance - 1)));
+                    break;
+                case 'monthly':
+                    baseDate.setMonth(baseDate.getMonth() + (task.recurrence.interval * (nextInstance - 1)));
+                    break;
+                case 'yearly':
+                    baseDate.setFullYear(baseDate.getFullYear() + (task.recurrence.interval * (nextInstance - 1)));
+                    break;
+            }
+            const nextDate = baseDate.toISOString().split('T')[0];
+            return nextDate > expiryDate;
+        }
+        if (expiryType === 'count') {
+            return (currentInstance + 1) >= expiryCount;
+        }
+        return false;
+    },
+    advanceToNextInstance(task) {
+        if (!task.recurrence || !task.recurrence.enabled) return task;
+        const newInstance = task.recurrence.currentInstance + 1;
+        if (this.isExpired({ ...task, recurrence: { ...task.recurrence, currentInstance: newInstance } })) {
+            return { ...task, completed: true };
+        }
+        const nextDueDate = this.calculateNextInstance({
+            ...task,
+            recurrence: { ...task.recurrence, currentInstance: newInstance }
+        });
+        return {
+            ...task,
+            dueDate: nextDueDate,
+            completed: false,
+            recurrence: { ...task.recurrence, currentInstance: newInstance }
+        };
+    }
+};
 
 // DOM elements
 const taskList = document.getElementById('task-list');
@@ -17,25 +86,9 @@ const dueDateInput = document.getElementById('due-date-input');
 // Initialize the application
 function init() {
     localStorage.removeItem('theme');
-    updateSortSelect();
+    localStorage.removeItem('sortingMode');
     renderTasks();
     setupEventListeners();
-}
-
-// Update sort select to match current mode
-function updateSortSelect() {
-    const sortSelect = document.getElementById('sort-select');
-    if (sortSelect) {
-        sortSelect.value = currentSortingMode;
-    }
-}
-
-// Handle sort change
-function handleSortChange() {
-    const sortSelect = document.getElementById('sort-select');
-    currentSortingMode = sortSelect.value;
-    localStorage.setItem('sortingMode', currentSortingMode);
-    renderTasks();
 }
 
 // Sort tasks by due date
@@ -153,6 +206,44 @@ function setupEventListeners() {
     });
 }
 
+// Toggle recurrence options visibility
+function toggleRecurrenceOptions() {
+    const enabled = document.getElementById('recurrence-enabled');
+    const options = document.getElementById('recurrence-options');
+    if (options) {
+        options.style.display = enabled.checked ? 'flex' : 'none';
+    }
+}
+
+// Toggle expiry input based on type
+function toggleExpiryInput() {
+    const expiryType = document.getElementById('expiry-type');
+    const dateInput = document.getElementById('expiry-date');
+    const countInput = document.getElementById('expiry-count');
+    if (dateInput) dateInput.style.display = expiryType.value === 'date' ? 'inline-block' : 'none';
+    if (countInput) countInput.style.display = expiryType.value === 'count' ? 'inline-block' : 'none';
+}
+
+// Reset recurrence form inputs
+function resetRecurrenceInputs() {
+    const enabled = document.getElementById('recurrence-enabled');
+    const options = document.getElementById('recurrence-options');
+    const expiryType = document.getElementById('expiry-type');
+    const expiryDate = document.getElementById('expiry-date');
+    const expiryCount = document.getElementById('expiry-count');
+    if (enabled) enabled.checked = false;
+    if (options) options.style.display = 'none';
+    if (expiryType) expiryType.value = 'none';
+    if (expiryDate) {
+        expiryDate.value = '';
+        expiryDate.style.display = 'none';
+    }
+    if (expiryCount) {
+        expiryCount.value = '';
+        expiryCount.style.display = 'none';
+    }
+}
+
 // Add a new task
 function addTask() {
     const text = newTaskInput.value.trim();
@@ -176,12 +267,31 @@ function addTask() {
         return;
     }
 
+    const recurrenceEnabled = document.getElementById('recurrence-enabled')?.checked || false;
+    const frequency = document.getElementById('recurrence-frequency')?.value || 'weekly';
+    const interval = parseInt(document.getElementById('recurrence-interval')?.value) || 1;
+    const expiryType = document.getElementById('expiry-type')?.value || 'none';
+    const expiryDate = document.getElementById('expiry-date')?.value || null;
+    const expiryCount = parseInt(document.getElementById('expiry-count')?.value) || null;
+
+    const recurrence = recurrenceEnabled ? {
+        enabled: true,
+        frequency,
+        interval,
+        startDate: dueDateInput.value || new Date().toISOString().split('T')[0],
+        currentInstance: 1,
+        expiryType: expiryType === 'none' ? null : expiryType,
+        expiryDate: expiryType === 'date' ? expiryDate : null,
+        expiryCount: expiryType === 'count' ? expiryCount : null
+    } : { enabled: false };
+
     const newTask = {
         id: Date.now(),
         text: text,
         completed: false,
         createdAt: new Date().toISOString(),
-        dueDate: dueDateInput.value || null
+        dueDate: dueDateInput.value || null,
+        recurrence
     };
 
     tasks.unshift(newTask); // Add to beginning of array
@@ -191,6 +301,7 @@ function addTask() {
     // Clear input and focus
     newTaskInput.value = '';
     dueDateInput.value = '';
+    resetRecurrenceInputs();
     newTaskInput.focus();
 
     // Add success animation
@@ -224,20 +335,7 @@ function renderTasks() {
     // Show/hide clear completed button
     clearCompletedBtn.style.display = completedTasks > 0 ? 'block' : 'none';
 
-    // Render based on sorting mode
-    if (currentSortingMode === 'dueDate') {
-        renderGroupedByDate();
-    } else {
-        renderFlatList();
-    }
-}
-
-// Render tasks in flat list (manual sorting)
-function renderFlatList() {
-    tasks.forEach((task, index) => {
-        const taskElement = createTaskElement(task, index);
-        taskList.appendChild(taskElement);
-    });
+    renderGroupedByDate();
 }
 
 // Render tasks grouped by date
@@ -363,24 +461,10 @@ function createDateHeader(title, count, groupId, isCollapsed = false, isOverdue 
 }
 
 // Create a task element
-function createTaskElement(task, index) {
+function createTaskElement(task) {
     const li = document.createElement('li');
     li.className = 'task-item';
     li.setAttribute('data-task-id', task.id);
-    li.setAttribute('draggable', 'true');
-    
-    // Drag and drop event listeners
-    li.addEventListener('dragstart', handleDragStart);
-    li.addEventListener('dragend', handleDragEnd);
-    li.addEventListener('dragover', handleDragOver);
-    li.addEventListener('dragenter', handleDragEnter);
-    li.addEventListener('dragleave', handleDragLeave);
-    li.addEventListener('drop', handleDrop);
-    
-    // Touch event listeners for mobile
-    li.addEventListener('touchstart', handleTouchStart, { passive: false });
-    li.addEventListener('touchmove', handleTouchMove, { passive: false });
-    li.addEventListener('touchend', handleTouchEnd);
 
     // Check if task is overdue
     const isOverdue = task.dueDate && !task.completed && isTaskOverdue(task.dueDate);
@@ -409,7 +493,7 @@ function createTaskElement(task, index) {
     }
 
     // Due date display
-    if (task.dueDate) {
+    if (task.recurrence?.enabled && task.dueDate) {
         const dueDateSpan = document.createElement('span');
         dueDateSpan.className = 'due-date';
         if (isOverdue) {
@@ -418,6 +502,25 @@ function createTaskElement(task, index) {
         dueDateSpan.textContent = formatDate(task.dueDate);
         taskContent.appendChild(span);
         taskContent.appendChild(dueDateSpan);
+        const recurIcon = document.createElement('span');
+        recurIcon.className = 'recurrence-icon';
+        recurIcon.textContent = '🔄';
+        taskContent.appendChild(recurIcon);
+    } else if (task.dueDate) {
+        const dueDateSpan = document.createElement('span');
+        dueDateSpan.className = 'due-date';
+        if (isOverdue) {
+            dueDateSpan.classList.add('overdue');
+        }
+        dueDateSpan.textContent = formatDate(task.dueDate);
+        taskContent.appendChild(span);
+        taskContent.appendChild(dueDateSpan);
+    } else if (task.recurrence?.enabled) {
+        const recurIcon = document.createElement('span');
+        recurIcon.className = 'recurrence-icon';
+        recurIcon.textContent = '🔄';
+        taskContent.appendChild(span);
+        taskContent.appendChild(recurIcon);
     } else {
         taskContent.appendChild(span);
     }
@@ -479,12 +582,30 @@ function formatDate(dateString) {
 
 // Toggle task completion
 function toggleTask(taskId) {
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-        task.completed = !task.completed;
-        saveTasks();
-        renderTasks();
+    const taskIndex = tasks.findIndex(t => t.id === taskId);
+    if (taskIndex === -1) return;
+
+    const task = tasks[taskIndex];
+    task.completed = !task.completed;
+
+    if (task.completed && task.recurrence?.enabled) {
+        const isExpired = RecurrenceEngine.isExpired(task);
+        
+        if (!isExpired) {
+            const newInstance = task.recurrence.currentInstance + 1;
+            const nextDueDate = RecurrenceEngine.calculateNextInstance({
+                ...task,
+                recurrence: { ...task.recurrence, currentInstance: newInstance }
+            });
+            
+            task.dueDate = nextDueDate;
+            task.recurrence.currentInstance = newInstance;
+            task.completed = false;
+        }
     }
+
+    saveTasks();
+    renderTasks();
 }
 
 // Delete a task
@@ -511,7 +632,6 @@ function editTask(taskId) {
     const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
     if (!taskElement) return;
 
-    taskElement.setAttribute('draggable', 'false');
     taskElement.classList.add('editing-mode');
 
     const taskContent = taskElement.querySelector('.task-content');
@@ -519,9 +639,11 @@ function editTask(taskId) {
 
     const textSpan = taskContent.querySelector('.task-text');
     const dueDateSpan = taskContent.querySelector('.due-date');
+    const recurrenceIcon = taskContent.querySelector('.recurrence-icon');
 
     const originalText = task.text;
     const originalDueDate = task.dueDate || '';
+    const originalRecurrence = task.recurrence || { enabled: false };
 
     if (textSpan) {
         textSpan.replaceWith(createEditInput('text', originalText));
@@ -529,11 +651,20 @@ function editTask(taskId) {
 
     if (dueDateSpan) {
         dueDateSpan.replaceWith(createEditInput('dueDate', originalDueDate));
-    } else {
+    } else if (!recurrenceIcon) {
         const emptyDueDate = document.createElement('span');
         emptyDueDate.className = 'due-date-edit-wrapper';
         emptyDueDate.appendChild(createEditInput('dueDate', originalDueDate));
         taskContent.appendChild(emptyDueDate);
+    }
+
+    if (recurrenceIcon) {
+        recurrenceIcon.replaceWith(createRecurrenceEditRow(originalRecurrence, taskContent));
+    } else {
+        const recurWrapper = document.createElement('div');
+        recurWrapper.className = 'recurrence-edit-wrapper';
+        recurWrapper.appendChild(createRecurrenceEditRow(originalRecurrence, taskContent));
+        taskContent.appendChild(recurWrapper);
     }
 
     const actionsContainer = taskElement.querySelector('.task-actions');
@@ -556,11 +687,111 @@ function editTask(taskId) {
         e.stopPropagation();
         task.text = originalText;
         task.dueDate = originalDueDate || null;
+        task.recurrence = originalRecurrence;
         renderTasks();
     };
 
     actionsContainer.appendChild(saveBtn);
     actionsContainer.appendChild(cancelBtn);
+}
+
+function createRecurrenceEditRow(recurrence, parent) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'recurrence-edit-row';
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'recurrence-edit-checkbox';
+    checkbox.checked = recurrence.enabled;
+    checkbox.id = 'edit-recurrence-enabled';
+
+    const label = document.createElement('label');
+    label.htmlFor = 'edit-recurrence-enabled';
+    label.textContent = '🔄';
+    label.className = 'recurrence-edit-label';
+
+    const select = document.createElement('select');
+    select.className = 'recurrence-edit-frequency';
+    select.id = 'edit-recurrence-frequency';
+    ['daily', 'weekly', 'monthly', 'yearly'].forEach(freq => {
+        const option = document.createElement('option');
+        option.value = freq;
+        option.textContent = freq.charAt(0).toUpperCase() + freq.slice(1);
+        if (recurrence.frequency === freq) option.selected = true;
+        select.appendChild(option);
+    });
+
+    const intervalInput = document.createElement('input');
+    intervalInput.type = 'number';
+    intervalInput.className = 'recurrence-edit-interval';
+    intervalInput.id = 'edit-recurrence-interval';
+    intervalInput.min = 1;
+    intervalInput.value = recurrence.interval || 1;
+
+    const expiryLabel = document.createElement('span');
+    expiryLabel.className = 'recurrence-edit-expiry-label';
+    expiryLabel.textContent = 'Ends:';
+
+    const expirySelect = document.createElement('select');
+    expirySelect.className = 'recurrence-edit-expiry-type';
+    expirySelect.id = 'edit-expiry-type';
+    ['none', 'date', 'count'].forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type === 'none' ? 'Never' : type === 'date' ? 'On date' : 'After';
+        if (recurrence.expiryType === type) option.selected = true;
+        expirySelect.appendChild(option);
+    });
+
+    const expiryDateInput = document.createElement('input');
+    expiryDateInput.type = 'date';
+    expiryDateInput.className = 'recurrence-edit-expiry-date';
+    expiryDateInput.id = 'edit-expiry-date';
+    expiryDateInput.value = recurrence.expiryDate || '';
+
+    const expiryCountInput = document.createElement('input');
+    expiryCountInput.type = 'number';
+    expiryCountInput.className = 'recurrence-edit-expiry-count';
+    expiryCountInput.id = 'edit-expiry-count';
+    expiryCountInput.min = 1;
+    expiryCountInput.value = recurrence.expiryCount || '';
+    expiryCountInput.placeholder = 'times';
+
+    const showExtras = recurrence.enabled;
+    select.style.display = showExtras ? 'inline-block' : 'none';
+    intervalInput.style.display = showExtras ? 'inline-block' : 'none';
+    expiryLabel.style.display = showExtras ? 'inline-block' : 'none';
+    expirySelect.style.display = showExtras ? 'inline-block' : 'none';
+    expiryDateInput.style.display = (showExtras && recurrence.expiryType === 'date') ? 'inline-block' : 'none';
+    expiryCountInput.style.display = (showExtras && recurrence.expiryType === 'count') ? 'inline-block' : 'none';
+
+    checkbox.addEventListener('change', () => {
+        const enabled = checkbox.checked;
+        select.style.display = enabled ? 'inline-block' : 'none';
+        intervalInput.style.display = enabled ? 'inline-block' : 'none';
+        expiryLabel.style.display = enabled ? 'inline-block' : 'none';
+        expirySelect.style.display = enabled ? 'inline-block' : 'none';
+        if (!enabled) {
+            expiryDateInput.style.display = 'none';
+            expiryCountInput.style.display = 'none';
+        }
+    });
+
+    expirySelect.addEventListener('change', () => {
+        expiryDateInput.style.display = expirySelect.value === 'date' ? 'inline-block' : 'none';
+        expiryCountInput.style.display = expirySelect.value === 'count' ? 'inline-block' : 'none';
+    });
+
+    wrapper.appendChild(checkbox);
+    wrapper.appendChild(label);
+    wrapper.appendChild(select);
+    wrapper.appendChild(intervalInput);
+    wrapper.appendChild(expiryLabel);
+    wrapper.appendChild(expirySelect);
+    wrapper.appendChild(expiryDateInput);
+    wrapper.appendChild(expiryCountInput);
+
+    return wrapper;
 }
 
 function createEditInput(type, value) {
@@ -600,6 +831,9 @@ function saveTaskEdit(taskId) {
 
     const editInput = taskElement.querySelector('.edit-input');
     const editDueDateInput = taskElement.querySelector('.edit-due-date-input');
+    const recurrenceCheckbox = taskElement.querySelector('.recurrence-edit-checkbox');
+    const recurrenceFrequency = taskElement.querySelector('.recurrence-edit-frequency');
+    const recurrenceInterval = taskElement.querySelector('.recurrence-edit-interval');
 
     const newText = editInput ? editInput.value.trim() : task.text;
     const newDueDate = editDueDateInput ? editDueDateInput.value || null : task.dueDate;
@@ -626,6 +860,48 @@ function saveTaskEdit(taskId) {
 
     task.text = newText;
     task.dueDate = newDueDate;
+
+    if (recurrenceCheckbox) {
+        const enabled = recurrenceCheckbox.checked;
+        const frequency = recurrenceFrequency ? recurrenceFrequency.value : 'weekly';
+        const interval = recurrenceInterval ? parseInt(recurrenceInterval.value) || 1 : 1;
+        
+        const expiryTypeSelect = taskElement.querySelector('.recurrence-edit-expiry-type');
+        const expiryDateInput = taskElement.querySelector('.recurrence-edit-expiry-date');
+        const expiryCountInput = taskElement.querySelector('.recurrence-edit-expiry-count');
+        
+        const expiryType = expiryTypeSelect ? expiryTypeSelect.value : 'none';
+        const expiryDate = expiryType === 'date' ? (expiryDateInput ? expiryDateInput.value : null) : null;
+        const expiryCount = expiryType === 'count' ? (expiryCountInput ? parseInt(expiryCountInput.value) : null) : null;
+
+        if (enabled) {
+            const previousRecurrence = task.recurrence || {};
+            const intervalChanged = previousRecurrence.interval !== interval;
+            const frequencyChanged = previousRecurrence.frequency !== frequency;
+            const shouldReset = intervalChanged || frequencyChanged;
+            
+            let adjustedExpiryCount = expiryCount;
+            
+            if (expiryType === 'count' && expiryCount && !shouldReset && previousRecurrence.currentInstance) {
+                adjustedExpiryCount = previousRecurrence.currentInstance + expiryCount;
+            }
+            
+            task.recurrence = {
+                enabled: true,
+                frequency,
+                interval,
+                startDate: shouldReset 
+                    ? (task.dueDate || task.createdAt.split('T')[0])
+                    : (previousRecurrence.startDate || task.dueDate || task.createdAt.split('T')[0]),
+                currentInstance: shouldReset ? 1 : (previousRecurrence.currentInstance || 1),
+                expiryType: expiryType === 'none' ? null : expiryType,
+                expiryDate,
+                expiryCount: adjustedExpiryCount
+            };
+        } else {
+            task.recurrence = { enabled: false };
+        }
+    }
 
     saveTasks();
     renderTasks();
@@ -679,152 +955,9 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Drag and drop handlers
-function handleDragStart(e) {
-    draggedItem = this;
-    this.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.innerHTML);
-}
-
-function handleDragEnd(e) {
-    this.classList.remove('dragging');
-    draggedItem = null;
-    
-    // Remove drag-over class from all items
-    document.querySelectorAll('.task-item').forEach(item => {
-        item.classList.remove('drag-over');
-    });
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-}
-
-function handleDragEnter(e) {
-    e.preventDefault();
-    if (this !== draggedItem) {
-        this.classList.add('drag-over');
-    }
-}
-
-function handleDragLeave(e) {
-    this.classList.remove('drag-over');
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (this !== draggedItem) {
-        // Get the indices of the dragged and dropped items
-        const draggedId = parseInt(draggedItem.getAttribute('data-task-id'));
-        const droppedId = parseInt(this.getAttribute('data-task-id'));
-        
-        const draggedIndex = tasks.findIndex(t => t.id === draggedId);
-        const droppedIndex = tasks.findIndex(t => t.id === droppedId);
-        
-        if (draggedIndex !== -1 && droppedIndex !== -1) {
-            // Remove the dragged item from its original position
-            const [removed] = tasks.splice(draggedIndex, 1);
-            
-            // Insert it at the new position
-            tasks.splice(droppedIndex, 0, removed);
-            
-            // Switch to manual sorting mode
-            currentSortingMode = 'manual';
-            localStorage.setItem('sortingMode', currentSortingMode);
-            updateSortSelect();
-            
-            // Save and re-render
-            saveTasks();
-            renderTasks();
-        }
-    }
-    
-    this.classList.remove('drag-over');
-}
-
-// Touch event handlers for mobile drag and drop
-function handleTouchStart(e) {
-    if (e.touches.length === 1) {
-        draggedItem = this;
-        touchStartY = e.touches[0].clientY;
-        touchStartX = e.touches[0].clientX;
-        this.classList.add('dragging');
-    }
-}
-
-function handleTouchMove(e) {
-    if (!draggedItem) return;
-    
-    e.preventDefault();
-    
-    const touchY = e.touches[0].clientY;
-    const touchX = e.touches[0].clientX;
-    
-    // Find the element under the touch point
-    const elementUnder = document.elementFromPoint(touchX, touchY);
-    const taskItem = elementUnder?.closest('.task-item');
-    
-    // Remove drag-over class from all items
-    document.querySelectorAll('.task-item').forEach(item => {
-        item.classList.remove('drag-over');
-    });
-    
-    // Add drag-over class to the item under the touch point
-    if (taskItem && taskItem !== draggedItem) {
-        taskItem.classList.add('drag-over');
-    }
-}
-
-function handleTouchEnd(e) {
-    if (!draggedItem) return;
-    
-    // Find the element under the final touch point
-    const touch = e.changedTouches[0];
-    const elementUnder = document.elementFromPoint(touch.clientX, touch.clientY);
-    const taskItem = elementUnder?.closest('.task-item');
-    
-    if (taskItem && taskItem !== draggedItem) {
-        // Get the indices of the dragged and dropped items
-        const draggedId = parseInt(draggedItem.getAttribute('data-task-id'));
-        const droppedId = parseInt(taskItem.getAttribute('data-task-id'));
-        
-        const draggedIndex = tasks.findIndex(t => t.id === draggedId);
-        const droppedIndex = tasks.findIndex(t => t.id === droppedId);
-        
-        if (draggedIndex !== -1 && droppedIndex !== -1) {
-            // Remove the dragged item from its original position
-            const [removed] = tasks.splice(draggedIndex, 1);
-            
-            // Insert it at the new position
-            tasks.splice(droppedIndex, 0, removed);
-            
-            // Switch to manual sorting mode
-            currentSortingMode = 'manual';
-            localStorage.setItem('sortingMode', currentSortingMode);
-            updateSortSelect();
-            
-            // Save and re-render
-            saveTasks();
-            renderTasks();
-        }
-    }
-    
-    // Clean up
-    draggedItem.classList.remove('dragging');
-    document.querySelectorAll('.task-item').forEach(item => {
-        item.classList.remove('drag-over');
-    });
-    draggedItem = null;
-}
-
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', init);
 
-// Also initialize immediately if DOM is already loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {

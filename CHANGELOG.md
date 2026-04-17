@@ -8,13 +8,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Planned features for future releases
+- Task recurrence engine - set tasks to recur daily, weekly, monthly, or yearly
+- Recurrence frequency options: Daily, Weekly, Monthly, Yearly
+- Recurrence interval - set tasks to repeat every N periods (e.g., every 2 weeks)
+- Recurrence start date tracking for accurate future date calculation
+- Recurrence icon (🔄) displayed on recurring tasks
+- Recurrence expiry options: Never, On date, After X times
+- Expiry by date - task expires when next occurrence exceeds the expiry date
+- Expiry by count - task expires after specified number of completions
+- Edit mode for recurrence settings - modify frequency, interval, and expiry
+- Recurrence editing adjusts expiry count based on current instance
+- Removed manual sorting (drag/drop and sort dropdown)
 
 ### Changed
-- Improvements to existing functionality
+- Tasks now store recurrence metadata (frequency, interval, startDate, currentInstance, expiryType, expiryDate, expiryCount)
+- Date and recurrence icon display on same line
+- Collapsible date groups remain functional
 
 ### Fixed
-- Bug fixes
+- Recurrence interval/frequency change now resets start date and current instance
+- Expiry by count now expires on the correct completion (not one extra)
+- Expiry by date now checks the next occurrence's date, not today's date
 
 ## [1.3.0] - 2026-04-17
 
