@@ -18,12 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expiry by count - task expires after specified number of completions
 - Edit mode for recurrence settings - modify frequency, interval, and expiry
 - Recurrence editing adjusts expiry count based on current instance
-- Removed manual sorting (drag/drop and sort dropdown)
+- Modern toggle switch for repeat option (replaces checkbox)
+- Recurrence options moved into same container as task creation fields
 
 ### Changed
 - Tasks now store recurrence metadata (frequency, interval, startDate, currentInstance, expiryType, expiryDate, expiryCount)
 - Date and recurrence icon display on same line
 - Collapsible date groups remain functional
+- Container max-width increased to accommodate recurrence options
+- Uniform height (46px) for task input, due date, and Add Task button
+- Removed manual sorting (drag/drop and sort dropdown)
 
 ### Fixed
 - Recurrence interval/frequency change now resets start date and current instance

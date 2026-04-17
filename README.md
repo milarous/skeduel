@@ -85,7 +85,7 @@ Open `index.html` in your browser to see Skeduel in action.
 7. **Overdue Tasks**: Tasks past their due date are highlighted for easy identification
 8. **Clearing Tasks**: Click "Clear Completed" to remove all finished tasks
 9. **Date Groups**: Tasks are grouped by due date with collapsible sections
-10. **Recurring Tasks**: Click "Repeat" to set a task to recur daily, weekly, monthly, or yearly
+10. **Recurring Tasks**: Toggle the "Repeat" switch to set a task to recur daily, weekly, monthly, or yearly
 11. **Recurrence Interval**: Set how often the task repeats (e.g., every 2 weeks)
 12. **Recurrence Expiry**: Set when the recurrence ends - "Never", "On date", or "After X times"
 13. **Editing Recurrence**: Click the edit button on a recurring task to modify its recurrence settings

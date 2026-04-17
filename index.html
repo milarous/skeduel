@@ -31,29 +31,32 @@
                         <span class="add-icon">+</span>
                         <span class="add-text">Add Task</span>
                     </button>
-                </div>
-                <div class="recurrence-row">
-                    <label class="recurrence-toggle">
-                        <input type="checkbox" id="recurrence-enabled" onchange="toggleRecurrenceOptions()">
-                        <span>Repeat</span>
-                    </label>
-                    <div id="recurrence-options" class="recurrence-options" style="display: none;">
-                        <select id="recurrence-frequency" class="recurrence-select">
-                            <option value="daily">Daily</option>
-                            <option value="weekly" selected>Weekly</option>
-                            <option value="monthly">Monthly</option>
-                            <option value="yearly">Yearly</option>
-                        </select>
-                        <span class="recurrence-every">every</span>
-                        <input type="number" id="recurrence-interval" class="recurrence-interval" value="1" min="1">
-                        <span class="expiry-label">Ends:</span>
-                        <select id="expiry-type" class="expiry-select" onchange="toggleExpiryInput()">
-                            <option value="none">Never</option>
-                            <option value="date">On date</option>
-                            <option value="count">After</option>
-                        </select>
-                        <input type="date" id="expiry-date" class="expiry-input" style="display: none;">
-                        <input type="number" id="expiry-count" class="expiry-input" placeholder="times" min="1" style="display: none;">
+                    <div class="recurrence-row">
+                        <label class="recurrence-toggle">
+                            <span class="toggle-switch">
+                                <input type="checkbox" id="recurrence-enabled" onchange="toggleRecurrenceOptions()">
+                                <span class="toggle-slider"></span>
+                            </span>
+                            <span>Repeat</span>
+                        </label>
+                        <div id="recurrence-options" class="recurrence-options" style="display: none;">
+                            <select id="recurrence-frequency" class="recurrence-select">
+                                <option value="daily">Daily</option>
+                                <option value="weekly" selected>Weekly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="yearly">Yearly</option>
+                            </select>
+                            <span class="recurrence-every">every</span>
+                            <input type="number" id="recurrence-interval" class="recurrence-interval" value="1" min="1">
+                            <span class="expiry-label">Ends:</span>
+                            <select id="expiry-type" class="expiry-select" onchange="toggleExpiryInput()">
+                                <option value="none">Never</option>
+                                <option value="date">On date</option>
+                                <option value="count">After</option>
+                            </select>
+                            <input type="date" id="expiry-date" class="expiry-input" style="display: none;">
+                            <input type="number" id="expiry-count" class="expiry-input" placeholder="times" min="1" style="display: none;">
+                        </div>
                     </div>
                 </div>
             </div>

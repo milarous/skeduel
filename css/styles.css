@@ -44,7 +44,7 @@ body {
 
 /* App container */
 .app-container {
-    max-width: 625px;
+    max-width: 670px;
     margin: 0 auto;
     padding: 2rem 1rem;
     min-height: 100vh;
@@ -81,12 +81,14 @@ body {
 
 .input-wrapper {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.75rem;
     background-color: var(--bg-secondary);
     padding: 1rem;
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
+    align-items: flex-start;
 }
 
 #new-task-input {
@@ -100,6 +102,8 @@ body {
     font-weight: 400;
     transition: all var(--transition-fast);
     outline: none;
+    height: 46px;
+    box-sizing: border-box;
 }
 
 #new-task-input::placeholder {
@@ -123,6 +127,8 @@ body {
     transition: all var(--transition-fast);
     outline: none;
     min-width: 165px;
+    height: 46px;
+    box-sizing: border-box;
 }
 
 .due-date-input:focus {
@@ -155,6 +161,8 @@ body {
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
+    height: 46px;
+    box-sizing: border-box;
 }
 
 .add-btn:hover {
@@ -172,13 +180,67 @@ body {
     font-weight: 700;
 }
 
+/* Toggle switch */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    transition: all var(--transition-fast);
+    border-radius: 24px;
+}
+
+.toggle-slider::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 1px;
+    bottom: 1px;
+    background-color: var(--text-muted);
+    transition: all var(--transition-fast);
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+    background-color: white;
+}
+
+.toggle-switch input:focus + .toggle-slider {
+    box-shadow: 0 0 0 3px rgb(129 140 248 / 0.2);
+}
+
 /* Recurrence row */
 .recurrence-row {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-top: 0.75rem;
-    padding: 0.5rem 0;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    flex-wrap: wrap;
 }
 
 .recurrence-toggle {
@@ -191,16 +253,11 @@ body {
     color: var(--text-secondary);
 }
 
-.recurrence-toggle input {
-    width: 1rem;
-    height: 1rem;
-    cursor: pointer;
-}
-
 .recurrence-options {
     display: none;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .recurrence-select {
@@ -253,7 +310,7 @@ body {
     padding: 0.375rem 0.5rem;
     border-radius: var(--radius-sm);
     font-size: 0.875rem;
-    width: 130px;
+    width: 145px;
 }
 
 /* Recurrence icon in task */
@@ -848,6 +905,10 @@ body {
     .input-wrapper {
         flex-direction: column;
         padding: 0.75rem;
+    }
+
+    #new-task-input {
+        min-width: 100%;
     }
 
     .due-date-input {
