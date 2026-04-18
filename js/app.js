@@ -645,27 +645,28 @@ function editTask(taskId) {
     const originalDueDate = task.dueDate || '';
     const originalRecurrence = task.recurrence || { enabled: false };
 
+    // Create first row: text and due date
+    const row1 = document.createElement('div');
+    row1.className = 'task-edit-row';
+
     if (textSpan) {
-        textSpan.replaceWith(createEditInput('text', originalText));
+        row1.appendChild(createEditInput('text', originalText));
     }
 
     if (dueDateSpan) {
-        dueDateSpan.replaceWith(createEditInput('dueDate', originalDueDate));
+        row1.appendChild(createEditInput('dueDate', originalDueDate));
     } else if (!recurrenceIcon) {
-        const emptyDueDate = document.createElement('span');
-        emptyDueDate.className = 'due-date-edit-wrapper';
-        emptyDueDate.appendChild(createEditInput('dueDate', originalDueDate));
-        taskContent.appendChild(emptyDueDate);
+        row1.appendChild(createEditInput('dueDate', originalDueDate));
     }
 
-    if (recurrenceIcon) {
-        recurrenceIcon.replaceWith(createRecurrenceEditRow(originalRecurrence, taskContent));
-    } else {
-        const recurWrapper = document.createElement('div');
-        recurWrapper.className = 'recurrence-edit-wrapper';
-        recurWrapper.appendChild(createRecurrenceEditRow(originalRecurrence, taskContent));
-        taskContent.appendChild(recurWrapper);
-    }
+    taskContent.innerHTML = '';
+    taskContent.appendChild(row1);
+
+    // Create second row: recurrence options
+    const row2 = document.createElement('div');
+    row2.className = 'task-edit-row';
+    row2.appendChild(createRecurrenceEditRow(originalRecurrence));
+    taskContent.appendChild(row2);
 
     const actionsContainer = taskElement.querySelector('.task-actions');
     actionsContainer.innerHTML = '';
@@ -695,9 +696,16 @@ function editTask(taskId) {
     actionsContainer.appendChild(cancelBtn);
 }
 
-function createRecurrenceEditRow(recurrence, parent) {
+function createRecurrenceEditRow(recurrence) {
     const wrapper = document.createElement('div');
     wrapper.className = 'recurrence-edit-row';
+
+    // Toggle switch
+    const toggleLabel = document.createElement('label');
+    toggleLabel.className = 'recurrence-edit-toggle';
+
+    const toggleSwitch = document.createElement('span');
+    toggleSwitch.className = 'toggle-switch';
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -705,10 +713,16 @@ function createRecurrenceEditRow(recurrence, parent) {
     checkbox.checked = recurrence.enabled;
     checkbox.id = 'edit-recurrence-enabled';
 
-    const label = document.createElement('label');
-    label.htmlFor = 'edit-recurrence-enabled';
-    label.textContent = '🔄';
-    label.className = 'recurrence-edit-label';
+    const toggleSlider = document.createElement('span');
+    toggleSlider.className = 'toggle-slider';
+
+    toggleSwitch.appendChild(checkbox);
+    toggleSwitch.appendChild(toggleSlider);
+    toggleLabel.appendChild(toggleSwitch);
+
+    const repeatLabel = document.createElement('span');
+    repeatLabel.className = 'recurrence-edit-label';
+    repeatLabel.textContent = 'Repeat';
 
     const select = document.createElement('select');
     select.className = 'recurrence-edit-frequency';
@@ -782,8 +796,8 @@ function createRecurrenceEditRow(recurrence, parent) {
         expiryCountInput.style.display = expirySelect.value === 'count' ? 'inline-block' : 'none';
     });
 
-    wrapper.appendChild(checkbox);
-    wrapper.appendChild(label);
+    wrapper.appendChild(toggleLabel);
+    wrapper.appendChild(repeatLabel);
     wrapper.appendChild(select);
     wrapper.appendChild(intervalInput);
     wrapper.appendChild(expiryLabel);

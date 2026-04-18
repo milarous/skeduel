@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Recurrence editing adjusts expiry count based on current instance
 - Modern toggle switch for repeat option (replaces checkbox)
 - Recurrence options moved into same container as task creation fields
+- Two-row edit layout - text and due date on first row, recurrence options on second row
+- Toggle switch for repeat in task edit mode with "Repeat" label
+- Uniform heights (38px) for edit inputs
 
 ### Changed
 - Tasks now store recurrence metadata (frequency, interval, startDate, currentInstance, expiryType, expiryDate, expiryCount)
@@ -27,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Collapsible date groups remain functional
 - Container max-width increased to accommodate recurrence options
 - Uniform height (46px) for task input, due date, and Add Task button
+- Improved color contrast for "every" and "Ends:" labels in task creation and edit areas
 - Removed manual sorting (drag/drop and sort dropdown)
 
 ### Fixed

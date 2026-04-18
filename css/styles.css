@@ -272,7 +272,7 @@ body {
 
 .recurrence-every {
     font-size: 0.875rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
 }
 
 .recurrence-interval {
@@ -287,7 +287,7 @@ body {
 
 .expiry-label {
     font-size: 0.875rem;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     font-weight: 500;
     margin-left: 0.5rem;
 }
@@ -342,81 +342,100 @@ body {
     gap: 0.5rem;
 }
 
-/* Recurrence edit in task */
-.recurrence-edit-wrapper {
-    margin-top: 0.25rem;
+/* Recurrence edit checkbox */
+.recurrence-edit-checkbox {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.recurrence-edit-toggle {
+    display: flex;
+    align-items: center;
+}
+
+.recurrence-edit-toggle .toggle-switch {
+    width: 36px;
+    height: 20px;
+}
+
+.recurrence-edit-toggle .toggle-slider::before {
+    height: 14px;
+    width: 14px;
+}
+
+.recurrence-edit-toggle .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(16px);
+}
+
+.recurrence-edit-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-right: 2px;
 }
 
 .recurrence-edit-row {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.375rem;
     flex-wrap: wrap;
-}
-
-.recurrence-edit-checkbox {
-    width: 1rem;
-    height: 1rem;
-    cursor: pointer;
-}
-
-.recurrence-edit-label {
-    font-size: 0.75rem;
+    width: 100%;
 }
 
 .recurrence-edit-frequency {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.375rem;
     border-radius: var(--radius-sm);
     font-size: 0.75rem;
+    width: 90px;
 }
 
 .recurrence-edit-interval {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.375rem;
     border-radius: var(--radius-sm);
     font-size: 0.75rem;
-    width: 50px;
+    width: 40px;
 }
 
 .recurrence-edit-expiry-label {
     font-size: 0.75rem;
-    color: var(--text-muted);
-    margin-left: 0.5rem;
+    color: var(--text-secondary);
+    margin-left: 0.25rem;
 }
 
 .recurrence-edit-expiry-type {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.375rem;
     border-radius: var(--radius-sm);
     font-size: 0.75rem;
-    width: 80px;
+    width: 70px;
 }
 
 .recurrence-edit-expiry-date {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.375rem;
     border-radius: var(--radius-sm);
     font-size: 0.75rem;
-    width: 120px;
+    width: 125px;
 }
 
 .recurrence-edit-expiry-count {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem 0.375rem;
     border-radius: var(--radius-sm);
     font-size: 0.75rem;
-    width: 60px;
+    width: 125px;
 }
 
 /* Tasks section */
@@ -791,11 +810,24 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.task-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.task-edit-row:last-of-type {
+    margin-top: 0.25rem;
 }
 
 .edit-input {
-    width: 100%;
+    flex: 1;
     background-color: var(--bg-primary);
     color: var(--text-primary);
     border: 2px solid var(--accent-primary);
@@ -804,6 +836,9 @@ body {
     font-size: 1rem;
     font-weight: 400;
     outline: none;
+    height: 38px;
+    box-sizing: border-box;
+    min-width: 100px;
 }
 
 .edit-input:focus {
@@ -824,6 +859,9 @@ body {
     font-size: 0.75rem;
     font-weight: 500;
     outline: none;
+    height: 38px;
+    box-sizing: border-box;
+    min-width: 130px;
 }
 
 .edit-due-date-input:focus {
