@@ -1,81 +1,3 @@
-// Task management
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-let collapsedGroups = JSON.parse(localStorage.getItem('collapsedGroups')) || {};
-
-// Recurrence Engine - data model and helper functions
-const RecurrenceEngine = {
-    calculateNextInstance(task) {
-        if (!task.recurrence || !task.recurrence.enabled) return null;
-        const { frequency, interval, startDate, currentInstance } = task.recurrence;
-        const baseDate = new Date(startDate || task.dueDate || task.createdAt);
-        baseDate.setHours(0, 0, 0, 0);
-        const instance = currentInstance || 1;
-        switch (frequency) {
-            case 'daily':
-                baseDate.setDate(baseDate.getDate() + (interval * (instance - 1)));
-                break;
-            case 'weekly':
-                baseDate.setDate(baseDate.getDate() + (interval * 7 * (instance - 1)));
-                break;
-            case 'monthly':
-                baseDate.setMonth(baseDate.getMonth() + (interval * (instance - 1)));
-                break;
-            case 'yearly':
-                baseDate.setFullYear(baseDate.getFullYear() + (interval * (instance - 1)));
-                break;
-        }
-        return baseDate.toISOString().split('T')[0];
-    },
-    isExpired(task) {
-        if (!task.recurrence || !task.recurrence.enabled) return false;
-        const { expiryType, expiryDate, expiryCount, currentInstance } = task.recurrence;
-        if (expiryType === 'date') {
-            if (!expiryDate) return false;
-            const nextInstance = currentInstance + 1;
-            const baseDate = new Date(task.recurrence.startDate || task.dueDate || task.createdAt);
-            baseDate.setHours(0, 0, 0, 0);
-            switch (task.recurrence.frequency) {
-                case 'daily':
-                    baseDate.setDate(baseDate.getDate() + (task.recurrence.interval * (nextInstance - 1)));
-                    break;
-                case 'weekly':
-                    baseDate.setDate(baseDate.getDate() + (task.recurrence.interval * 7 * (nextInstance - 1)));
-                    break;
-                case 'monthly':
-                    baseDate.setMonth(baseDate.getMonth() + (task.recurrence.interval * (nextInstance - 1)));
-                    break;
-                case 'yearly':
-                    baseDate.setFullYear(baseDate.getFullYear() + (task.recurrence.interval * (nextInstance - 1)));
-                    break;
-            }
-            const nextDate = baseDate.toISOString().split('T')[0];
-            return nextDate > expiryDate;
-        }
-        if (expiryType === 'count') {
-            return (currentInstance + 1) >= expiryCount;
-        }
-        return false;
-    },
-    advanceToNextInstance(task) {
-        if (!task.recurrence || !task.recurrence.enabled) return task;
-        const newInstance = task.recurrence.currentInstance + 1;
-        if (this.isExpired({ ...task, recurrence: { ...task.recurrence, currentInstance: newInstance } })) {
-            return { ...task, completed: true };
-        }
-        const nextDueDate = this.calculateNextInstance({
-            ...task,
-            recurrence: { ...task.recurrence, currentInstance: newInstance }
-        });
-        return {
-            ...task,
-            dueDate: nextDueDate,
-            completed: false,
-            recurrence: { ...task.recurrence, currentInstance: newInstance }
-        };
-    }
-};
-
-// DOM elements
 const taskList = document.getElementById('task-list');
 const emptyState = document.getElementById('empty-state');
 const taskCount = document.getElementById('task-count');
@@ -83,7 +5,6 @@ const clearCompletedBtn = document.getElementById('clear-completed');
 const newTaskInput = document.getElementById('new-task-input');
 const dueDateInput = document.getElementById('due-date-input');
 
-// Initialize the application
 function init() {
     localStorage.removeItem('theme');
     localStorage.removeItem('sortingMode');
@@ -91,20 +12,17 @@ function init() {
     setupEventListeners();
 }
 
-// Sort tasks by due date
 function sortByDueDate(tasksToSort) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
     return [...tasksToSort].sort((a, b) => {
-        // Tasks without due dates go to the end
         if (!a.dueDate && !b.dueDate) {
             return new Date(b.createdAt) - new Date(a.createdAt);
         }
         if (!a.dueDate) return 1;
         if (!b.dueDate) return -1;
         
-        // Sort by due date (earliest first)
         const dateA = new Date(a.dueDate);
         const dateB = new Date(b.dueDate);
         dateA.setHours(0, 0, 0, 0);
@@ -114,7 +32,6 @@ function sortByDueDate(tasksToSort) {
     });
 }
 
-// Group tasks by due date
 function groupTasksByDate(tasksToGroup) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -151,7 +68,6 @@ function groupTasksByDate(tasksToGroup) {
     return groups;
 }
 
-// Format date for header
 function formatDateHeader(dateString) {
     const date = new Date(dateString);
     const today = new Date();
@@ -171,10 +87,9 @@ function formatDateHeader(dateString) {
     return date.toLocaleDateString('en-US', options);
 }
 
-// Toggle group collapse
 function toggleGroupCollapse(groupId) {
     collapsedGroups[groupId] = !collapsedGroups[groupId];
-    localStorage.setItem('collapsedGroups', JSON.stringify(collapsedGroups));
+    saveCollapsedGroups();
     
     const group = document.getElementById(groupId);
     const header = document.querySelector(`[data-group-id="${groupId}"]`);
@@ -187,16 +102,13 @@ function toggleGroupCollapse(groupId) {
     }
 }
 
-// Setup event listeners
 function setupEventListeners() {
-    // Add task on Enter key
     newTaskInput.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') {
             addTask();
         }
     });
 
-    // Add task on input focus + Enter (for better UX)
     newTaskInput.addEventListener('focus', () => {
         newTaskInput.parentElement.classList.add('focused');
     });
@@ -206,7 +118,6 @@ function setupEventListeners() {
     });
 }
 
-// Toggle recurrence options visibility
 function toggleRecurrenceOptions() {
     const enabled = document.getElementById('recurrence-enabled');
     const options = document.getElementById('recurrence-options');
@@ -215,7 +126,6 @@ function toggleRecurrenceOptions() {
     }
 }
 
-// Toggle expiry input based on type
 function toggleExpiryInput() {
     const expiryType = document.getElementById('expiry-type');
     const dateInput = document.getElementById('expiry-date');
@@ -224,7 +134,6 @@ function toggleExpiryInput() {
     if (countInput) countInput.style.display = expiryType.value === 'count' ? 'inline-block' : 'none';
 }
 
-// Reset recurrence form inputs
 function resetRecurrenceInputs() {
     const enabled = document.getElementById('recurrence-enabled');
     const options = document.getElementById('recurrence-options');
@@ -244,12 +153,10 @@ function resetRecurrenceInputs() {
     }
 }
 
-// Add a new task
 function addTask() {
     const text = newTaskInput.value.trim();
     
     if (!text) {
-        // Add visual feedback for empty input
         newTaskInput.style.borderColor = '#ef4444';
         setTimeout(() => {
             newTaskInput.style.borderColor = '';
@@ -257,7 +164,6 @@ function addTask() {
         return;
     }
 
-    // Check for duplicate tasks
     const isDuplicate = tasks.some(task => 
         task.text.toLowerCase() === text.toLowerCase()
     );
@@ -294,26 +200,23 @@ function addTask() {
         recurrence
     };
 
-    tasks.unshift(newTask); // Add to beginning of array
+    tasks.unshift(newTask);
     saveTasks();
     renderTasks();
     
-    // Clear input and focus
     newTaskInput.value = '';
     dueDateInput.value = '';
     resetRecurrenceInputs();
     newTaskInput.focus();
 
-    // Add success animation
     const firstTask = taskList.querySelector('.task-item');
     if (firstTask) {
         firstTask.style.animation = 'none';
-        firstTask.offsetHeight; // Trigger reflow
+        firstTask.offsetHeight;
         firstTask.style.animation = 'fadeIn 0.3s ease';
     }
 }
 
-// Render all tasks
 function renderTasks() {
     taskList.innerHTML = '';
 
@@ -326,33 +229,27 @@ function renderTasks() {
 
     emptyState.classList.remove('show');
 
-    // Update task count
     const activeTasks = tasks.filter(task => !task.completed).length;
     const completedTasks = tasks.filter(task => task.completed).length;
     
     taskCount.textContent = `${activeTasks} active task${activeTasks !== 1 ? 's' : ''}`;
     
-    // Show/hide clear completed button
     clearCompletedBtn.style.display = completedTasks > 0 ? 'block' : 'none';
 
     renderGroupedByDate();
 }
 
-// Render tasks grouped by date
 function renderGroupedByDate() {
     const sortedTasks = sortByDueDate(tasks);
     const groups = groupTasksByDate(sortedTasks);
     
-    // Render overdue tasks (always visible)
     if (groups.overdue.length > 0) {
         const groupId = 'overdue';
         const isCollapsed = collapsedGroups[groupId] || false;
         
-        // Create header
         const header = createDateHeader('Overdue', groups.overdue.length, groupId, isCollapsed, true);
         taskList.appendChild(header);
         
-        // Create group container
         const groupContainer = document.createElement('div');
         groupContainer.className = `task-group ${isCollapsed ? 'collapsed' : ''}`;
         groupContainer.id = groupId;
@@ -365,16 +262,13 @@ function renderGroupedByDate() {
         taskList.appendChild(groupContainer);
     }
     
-    // Render today's tasks (always visible)
     if (groups.today.length > 0) {
         const groupId = 'today';
         const isCollapsed = collapsedGroups[groupId] || false;
         
-        // Create header
         const header = createDateHeader('Today', groups.today.length, groupId, isCollapsed, false, true);
         taskList.appendChild(header);
         
-        // Create group container
         const groupContainer = document.createElement('div');
         groupContainer.className = `task-group ${isCollapsed ? 'collapsed' : ''}`;
         groupContainer.id = groupId;
@@ -387,18 +281,15 @@ function renderGroupedByDate() {
         taskList.appendChild(groupContainer);
     }
     
-    // Render future tasks by date
     const futureDates = Object.keys(groups.future).sort();
     futureDates.forEach(dateKey => {
         const tasksForDate = groups.future[dateKey];
         const groupId = `date-${dateKey}`;
         const isCollapsed = collapsedGroups[groupId] || false;
         
-        // Create header
         const header = createDateHeader(formatDateHeader(dateKey), tasksForDate.length, groupId, isCollapsed);
         taskList.appendChild(header);
         
-        // Create group container
         const groupContainer = document.createElement('div');
         groupContainer.className = `task-group ${isCollapsed ? 'collapsed' : ''}`;
         groupContainer.id = groupId;
@@ -411,16 +302,13 @@ function renderGroupedByDate() {
         taskList.appendChild(groupContainer);
     });
     
-    // Render tasks without due dates
     if (groups.noDate.length > 0) {
         const groupId = 'no-date';
         const isCollapsed = collapsedGroups[groupId] || false;
         
-        // Create header
         const header = createDateHeader('No Due Date', groups.noDate.length, groupId, isCollapsed);
         taskList.appendChild(header);
         
-        // Create group container
         const groupContainer = document.createElement('div');
         groupContainer.className = `task-group ${isCollapsed ? 'collapsed' : ''}`;
         groupContainer.id = groupId;
@@ -434,7 +322,6 @@ function renderGroupedByDate() {
     }
 }
 
-// Create date header element
 function createDateHeader(title, count, groupId, isCollapsed = false, isOverdue = false, isToday = false) {
     const header = document.createElement('div');
     header.className = `date-header ${isCollapsed ? 'collapsed' : ''} ${isOverdue ? 'overdue' : ''} ${isToday ? 'today' : ''}`;
@@ -460,19 +347,20 @@ function createDateHeader(title, count, groupId, isCollapsed = false, isOverdue 
     return header;
 }
 
-// Create a task element
 function createTaskElement(task) {
     const li = document.createElement('li');
     li.className = 'task-item';
     li.setAttribute('data-task-id', task.id);
+    li.setAttribute('draggable', 'true');
+    li.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', task.id.toString());
+    });
 
-    // Check if task is overdue
     const isOverdue = task.dueDate && !task.completed && isTaskOverdue(task.dueDate);
     if (isOverdue) {
         li.classList.add('overdue');
     }
 
-    // Checkbox
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.className = 'task-checkbox';
@@ -480,11 +368,9 @@ function createTaskElement(task) {
     checkbox.setAttribute('aria-label', `Mark "${task.text}" as ${task.completed ? 'incomplete' : 'complete'}`);
     checkbox.onchange = () => toggleTask(task.id);
 
-    // Task content container
     const taskContent = document.createElement('div');
     taskContent.className = 'task-content';
 
-    // Task text
     const span = document.createElement('span');
     span.textContent = task.text;
     span.className = 'task-text';
@@ -492,7 +378,6 @@ function createTaskElement(task) {
         span.classList.add('completed');
     }
 
-    // Due date display
     if (task.recurrence?.enabled && task.dueDate) {
         const dueDateSpan = document.createElement('span');
         dueDateSpan.className = 'due-date';
@@ -525,11 +410,9 @@ function createTaskElement(task) {
         taskContent.appendChild(span);
     }
 
-    // Task actions container
     const taskActions = document.createElement('div');
     taskActions.className = 'task-actions';
 
-    // Edit button
     const editBtn = document.createElement('button');
     editBtn.className = 'edit-btn';
     editBtn.innerHTML = '&#9998;';
@@ -539,7 +422,6 @@ function createTaskElement(task) {
         editTask(task.id);
     };
 
-    // Delete button
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-btn';
     deleteBtn.innerHTML = '×';
@@ -552,7 +434,6 @@ function createTaskElement(task) {
     taskActions.appendChild(editBtn);
     taskActions.appendChild(deleteBtn);
 
-    // Assemble the task item
     li.appendChild(checkbox);
     li.appendChild(taskContent);
     li.appendChild(taskActions);
@@ -560,7 +441,6 @@ function createTaskElement(task) {
     return li;
 }
 
-// Check if a task is overdue
 function isTaskOverdue(dueDate) {
     if (!dueDate) return false;
     
@@ -573,14 +453,12 @@ function isTaskOverdue(dueDate) {
     return due < today;
 }
 
-// Format date for display
 function formatDate(dateString) {
     const date = new Date(dateString);
     const options = { month: 'short', day: 'numeric' };
     return date.toLocaleDateString('en-US', options);
 }
 
-// Toggle task completion
 function toggleTask(taskId) {
     const taskIndex = tasks.findIndex(t => t.id === taskId);
     if (taskIndex === -1) return;
@@ -608,12 +486,10 @@ function toggleTask(taskId) {
     renderTasks();
 }
 
-// Delete a task
 function deleteTask(taskId) {
     const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
 
     if (taskElement) {
-        // Add delete animation
         taskElement.style.animation = 'fadeOut 0.3s ease';
 
         setTimeout(() => {
@@ -624,7 +500,6 @@ function deleteTask(taskId) {
     }
 }
 
-// Edit a task
 function editTask(taskId) {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
@@ -645,7 +520,6 @@ function editTask(taskId) {
     const originalDueDate = task.dueDate || '';
     const originalRecurrence = task.recurrence || { enabled: false };
 
-    // Create first row: text and due date
     const row1 = document.createElement('div');
     row1.className = 'task-edit-row';
 
@@ -662,7 +536,6 @@ function editTask(taskId) {
     taskContent.innerHTML = '';
     taskContent.appendChild(row1);
 
-    // Create second row: recurrence options
     const row2 = document.createElement('div');
     row2.className = 'task-edit-row';
     row2.appendChild(createRecurrenceEditRow(originalRecurrence));
@@ -700,7 +573,6 @@ function createRecurrenceEditRow(recurrence) {
     const wrapper = document.createElement('div');
     wrapper.className = 'recurrence-edit-row';
 
-    // Toggle switch
     const toggleLabel = document.createElement('label');
     toggleLabel.className = 'recurrence-edit-toggle';
 
@@ -921,18 +793,15 @@ function saveTaskEdit(taskId) {
     renderTasks();
 }
 
-// Clear all completed tasks
 function clearCompleted() {
     const completedTasks = tasks.filter(task => task.completed);
     
     if (completedTasks.length === 0) return;
 
-    // Confirm deletion
     if (!confirm(`Are you sure you want to delete ${completedTasks.length} completed task${completedTasks.length !== 1 ? 's' : ''}?`)) {
         return;
     }
 
-    // Animate out completed tasks
     const completedElements = document.querySelectorAll('.task-text.completed');
     completedElements.forEach(el => {
         const taskItem = el.closest('.task-item');
@@ -948,12 +817,6 @@ function clearCompleted() {
     }, 300);
 }
 
-// Save tasks to localStorage
-function saveTasks() {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-}
-
-// Add CSS for fadeOut animation
 const style = document.createElement('style');
 style.textContent = `
     @keyframes fadeOut {
@@ -969,7 +832,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', init);
 
 if (document.readyState === 'loading') {
