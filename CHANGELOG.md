@@ -8,10 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Daily Focus feature (under construction - data layer implemented, UI coming soon)
+- Daily Focus feature (under construction - data layer implemented, UI built)
   - FocusDay storage module with localStorage persistence keyed by date (YYYY-MM-DD)
   - FocusDay data structure: taskIds, notes (keyed by taskId), timeSlots (keyed by taskId)
   - FocusDay.get(dateStr), FocusDay.save(dateStr, data), FocusDay.getOrCreate(dateStr) functions
+  - FocusDay.render(), FocusDay.navigatePrev(), FocusDay.navigateNext() for UI updates
+  - FocusDay.init() for initializing date navigation and render
+- Daily Focus panel in UI with:
+  - Date navigator (< Prev | Today | Next >)
+  - Drop zone for dragged tasks (empty state: "No tasks yet / Drag tasks here to add to your daily focus")
+  - Date display format:Today/Tomorrow or weekday short month day (e.g., "Wed Apr 23")
 - Draggable task elements with dragstart handler storing task ID in dataTransfer
 - Task recurrence engine - set tasks to recur daily, weekly, monthly, or yearly
 - Recurrence frequency options: Daily, Weekly, Monthly, Yearly
@@ -34,6 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - js/data.js - shared data layer (tasks, collapsedGroups, RecurrenceEngine, save functions)
   - js/focusDay.js - Daily Focus storage module
   - js/taskList.js - task list UI/rendering logic
+- Two-column layout: task input/list on left, Daily Focus panel on right
+- Responsive layout: focus panel moves to top on mobile
 - Tasks now store recurrence metadata (frequency, interval, startDate, currentInstance, expiryType, expiryDate, expiryCount)
 - Date and recurrence icon display on same line
 - Collapsible date groups remain functional

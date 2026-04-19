@@ -44,12 +44,102 @@ body {
 
 /* App container */
 .app-container {
-    max-width: 670px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 2rem 1rem;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+}
+
+/* Main content with two columns */
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 2rem;
+}
+
+.task-column {
+    flex: 1 1 670px;
+    min-width: 0;
+    max-width: 670px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Focus panel */
+.focus-panel {
+    flex: 1 1 670px;
+    min-width: 0;
+    max-width: 670px;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.focus-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.focus-nav-btn {
+    background: none;
+    border: none;
+    color: var(--accent-color);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.focus-nav-btn:hover {
+    background-color: var(--bg-secondary);
+}
+
+.focus-date {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.focus-drop-zone {
+    flex: 1;
+    padding: 1rem;
+    min-height: 200px;
+}
+
+.focus-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.focus-empty-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.focus-empty-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.focus-empty-description {
+    font-size: 0.875rem;
 }
 
 /* Header styles */
@@ -67,11 +157,6 @@ body {
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.025em;
-}
-
-/* Main content */
-.main-content {
-    flex: 1;
 }
 
 /* Input section */
@@ -282,7 +367,7 @@ body {
     padding: 0.375rem 0.5rem;
     border-radius: var(--radius-sm);
     font-size: 0.875rem;
-    width: 50px;
+    width: 55px;
 }
 
 .expiry-label {
@@ -925,6 +1010,17 @@ body {
 }
 
 /* Responsive design */
+@media (max-width: 900px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .focus-panel {
+        width: 100%;
+        order: -1;
+    }
+}
+
 @media (max-width: 640px) {
     .app-container {
         padding: 1rem;

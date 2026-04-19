@@ -12,67 +12,84 @@
             <h1 class="app-title">Skeduel</h1>
         </header>
 
-        <main class="main-content">
-            <div class="input-section">
-                <div class="input-wrapper">
-                    <input 
-                        type="text" 
-                        id="new-task-input" 
-                        placeholder="What needs to be done?" 
-                        aria-label="New task input"
-                    >
-                    <input 
-                        type="date" 
-                        id="due-date-input" 
-                        class="due-date-input"
-                        aria-label="Due date (optional)"
-                    >
-                    <button class="add-btn" onclick="addTask()" aria-label="Add task">
-                        <span class="add-icon">+</span>
-                        <span class="add-text">Add Task</span>
-                    </button>
-                    <div class="recurrence-row">
-                        <label class="recurrence-toggle">
-                            <span class="toggle-switch">
-                                <input type="checkbox" id="recurrence-enabled" onchange="toggleRecurrenceOptions()">
-                                <span class="toggle-slider"></span>
-                            </span>
-                            <span>Repeat</span>
-                        </label>
-                        <div id="recurrence-options" class="recurrence-options" style="display: none;">
-                            <select id="recurrence-frequency" class="recurrence-select">
-                                <option value="daily">Daily</option>
-                                <option value="weekly" selected>Weekly</option>
-                                <option value="monthly">Monthly</option>
-                                <option value="yearly">Yearly</option>
-                            </select>
-                            <span class="recurrence-every">every</span>
-                            <input type="number" id="recurrence-interval" class="recurrence-interval" value="1" min="1">
-                            <span class="expiry-label">Ends:</span>
-                            <select id="expiry-type" class="expiry-select" onchange="toggleExpiryInput()">
-                                <option value="none">Never</option>
-                                <option value="date">On date</option>
-                                <option value="count">After</option>
-                            </select>
-                            <input type="date" id="expiry-date" class="expiry-input" style="display: none;">
-                            <input type="number" id="expiry-count" class="expiry-input" placeholder="times" min="1" style="display: none;">
+<main class="main-content">
+            <div class="task-column">
+                <div class="input-section">
+                    <div class="input-wrapper">
+                        <input
+                            type="text"
+                            id="new-task-input"
+                            placeholder="What needs to be done?"
+                            aria-label="New task input"
+                        >
+                        <input
+                            type="date"
+                            id="due-date-input"
+                            class="due-date-input"
+                            aria-label="Due date (optional)"
+                        >
+                        <button class="add-btn" onclick="addTask()" aria-label="Add task">
+                            <span class="add-icon">+</span>
+                            <span class="add-text">Add Task</span>
+                        </button>
+                        <div class="recurrence-row">
+                            <label class="recurrence-toggle">
+                                <span class="toggle-switch">
+                                    <input type="checkbox" id="recurrence-enabled" onchange="toggleRecurrenceOptions()">
+                                    <span class="toggle-slider"></span>
+                                </span>
+                                <span>Repeat</span>
+                            </label>
+                            <div id="recurrence-options" class="recurrence-options" style="display: none;">
+                                <select id="recurrence-frequency" class="recurrence-select">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="yearly">Yearly</option>
+                                </select>
+                                <span class="recurrence-every">every</span>
+                                <input type="number" id="recurrence-interval" class="recurrence-interval" value="1" min="1">
+                                <span class="expiry-label">Ends:</span>
+                                <select id="expiry-type" class="expiry-select" onchange="toggleExpiryInput()">
+                                    <option value="none">Never</option>
+                                    <option value="date">On date</option>
+                                    <option value="count">After</option>
+                                </select>
+                                <input type="date" id="expiry-date" class="expiry-input" style="display: none;">
+                                <input type="number" id="expiry-count" class="expiry-input" placeholder="times" min="1" style="display: none;">
+                            </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="tasks-section">
+                    <div class="tasks-header">
+                        <span class="task-count" id="task-count">0 tasks</span>
+                        <button class="clear-completed-btn" onclick="clearCompleted()" id="clear-completed" style="display: none;">
+                            Clear Completed
+                        </button>
+                    </div>
+                    <ul class="task-list" id="task-list"></ul>
+                    <div class="empty-state" id="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <h3 class="empty-title">No tasks yet!</h3>
+                        <p class="empty-description">Add your first task to get started with your productivity journey.</p>
                     </div>
                 </div>
             </div>
 
-            <div class="tasks-section">
-                <div class="tasks-header">
-                    <span class="task-count" id="task-count">0 tasks</span>
-                    <button class="clear-completed-btn" onclick="clearCompleted()" id="clear-completed" style="display: none;">
-                        Clear Completed
-                    </button>
+            <div class="focus-panel">
+                <div class="focus-header">
+                    <button class="focus-nav-btn" id="focus-prev">&lt; Prev</button>
+                    <span class="focus-date" id="focus-date">Today</span>
+                    <button class="focus-nav-btn" id="focus-next">Next &gt;</button>
                 </div>
-                <ul class="task-list" id="task-list"></ul>
-                <div class="empty-state" id="empty-state">
-                    <div class="empty-icon">📝</div>
-                    <h3 class="empty-title">No tasks yet!</h3>
-                    <p class="empty-description">Add your first task to get started with your productivity journey.</p>
+                <div class="focus-drop-zone" id="focus-drop-zone">
+                    <div class="focus-empty" id="focus-empty">
+                        <div class="focus-empty-icon">🎯</div>
+                        <h3 class="focus-empty-title">No tasks yet</h3>
+                        <p class="focus-empty-description">Drag tasks here to add to your daily focus</p>
+                    </div>
                 </div>
             </div>
         </main>
