@@ -72,6 +72,104 @@ const FocusDay = {
         if (dateDisplay) {
             dateDisplay.textContent = this.formatDateDisplay(this.currentFocusDate);
         }
+
+        this.renderTasks();
+    },
+
+    renderTasks() {
+        const dropZone = document.getElementById('focus-drop-zone');
+        const emptyState = document.getElementById('focus-empty');
+        if (!dropZone) return;
+
+        const focusDay = this.getOrCreate(this.currentFocusDate);
+        const taskIds = focusDay.taskIds || [];
+
+        const existingTaskList = dropZone.querySelector('.focus-task-list');
+        if (existingTaskList) {
+            existingTaskList.remove();
+        }
+
+        if (taskIds.length === 0) {
+            if (emptyState) {
+                emptyState.style.display = 'flex';
+            }
+            return;
+        }
+
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+
+        const taskList = document.createElement('div');
+        taskList.className = 'focus-task-list';
+
+        taskIds.forEach(taskId => {
+            const task = tasks.find(t => t.id === taskId);
+            if (!task) return;
+
+            const card = document.createElement('div');
+            card.className = 'focus-task-card';
+
+            const title = document.createElement('span');
+            title.className = 'focus-task-title';
+            title.textContent = task.text;
+            if (task.completed) {
+                title.classList.add('completed');
+            }
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'focus-task-remove';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.setAttribute('aria-label', `Remove "${task.text}" from daily focus`);
+            removeBtn.onclick = () => this.removeTask(taskId);
+
+            card.appendChild(title);
+            card.appendChild(removeBtn);
+            taskList.appendChild(card);
+        });
+
+        dropZone.appendChild(taskList);
+    },
+
+    addTask(taskId) {
+        const focusDay = this.getOrCreate(this.currentFocusDate);
+        if (!focusDay.taskIds.includes(taskId)) {
+            focusDay.taskIds.push(taskId);
+            this.save(this.currentFocusDate, focusDay);
+            this.render();
+        }
+    },
+
+    removeTask(taskId) {
+        const focusDay = this.get(this.currentFocusDate);
+        if (focusDay && focusDay.taskIds) {
+            focusDay.taskIds = focusDay.taskIds.filter(id => id !== taskId);
+            this.save(this.currentFocusDate, focusDay);
+            this.render();
+        }
+    },
+
+    setupDragListeners() {
+        const dropZone = document.getElementById('focus-drop-zone');
+        if (!dropZone) return;
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const taskId = parseInt(e.dataTransfer.getData('text/plain'));
+            if (taskId) {
+                this.addTask(taskId);
+            }
+        });
     },
 
     init() {
@@ -85,6 +183,7 @@ const FocusDay = {
             nextBtn.addEventListener('click', () => this.navigateNext());
         }
 
+        this.setupDragListeners();
         this.render();
     }
 };

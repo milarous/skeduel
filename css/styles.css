@@ -68,11 +68,17 @@ body {
     flex-direction: column;
 }
 
-/* Focus panel */
-.focus-panel {
+/* Focus column */
+.focus-column {
     flex: 1 1 670px;
     min-width: 0;
     max-width: 670px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Focus panel */
+.focus-panel {
     display: flex;
     flex-direction: column;
     background-color: var(--bg-secondary);
@@ -112,7 +118,6 @@ body {
 }
 
 .focus-drop-zone {
-    flex: 1;
     padding: 1rem;
     min-height: 200px;
 }
@@ -142,6 +147,54 @@ body {
     font-size: 0.875rem;
 }
 
+.focus-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.focus-task-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--bg-primary);
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.focus-task-title {
+    flex: 1;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+}
+
+.focus-task-title.completed {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.focus-task-remove {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    margin-left: 0.5rem;
+    line-height: 1;
+}
+
+.focus-task-remove:hover {
+    color: var(--danger);
+}
+
+.focus-drop-zone.drag-over {
+    background-color: var(--bg-primary);
+    border: 2px dashed var(--accent-color);
+    border-radius: var(--radius-md);
+}
+
 /* Header styles */
 .app-header {
     display: flex;
@@ -152,11 +205,27 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+.app-header > div {
+    flex: 1;
+}
+
 .app-title {
     font-size: 2rem;
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.025em;
+    text-align: center;
+}
+
+.column-header {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.675rem;
+    border-bottom: 2px solid var(--accent-color);
+    display: inline-block;
 }
 
 /* Input section */
@@ -1015,7 +1084,7 @@ body {
         flex-direction: column;
     }
 
-    .focus-panel {
+    .focus-column {
         width: 100%;
         order: -1;
     }
