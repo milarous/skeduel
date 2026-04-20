@@ -43,6 +43,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Two-row edit layout - text and due date on first row, recurrence options on second row
 - Toggle switch for repeat in task edit mode with "Repeat" label
 - Uniform heights (38px) for edit inputs
+- Custom modal dialog system:
+  - showModal(message) for alerts with single OK button
+  - showConfirmModal(message, onConfirm) for confirmations with Confirm/Cancel buttons
+  - Styled to match app theme with dark background and accent borders
+  - Closes on Escape key or clicking outside modal
+- Replaced native alert() and confirm() dialogs with custom styled modals
 
 ### Changed
 - Refactored codebase into modular structure:

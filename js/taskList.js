@@ -4,6 +4,64 @@ const taskCount = document.getElementById('task-count');
 const clearCompletedBtn = document.getElementById('clear-completed');
 const newTaskInput = document.getElementById('new-task-input');
 const dueDateInput = document.getElementById('due-date-input');
+const modalOverlay = document.getElementById('modal-overlay');
+const modalMessage = document.getElementById('modal-message');
+const modalButtons = document.getElementById('modal-buttons');
+const modalConfirm = document.getElementById('modal-confirm');
+const modalCancel = document.getElementById('modal-cancel');
+
+let confirmCallback = null;
+
+function showModal(message) {
+    if (!modalOverlay || !modalMessage || !modalButtons) return;
+    modalMessage.textContent = message;
+    if (modalConfirm) modalConfirm.style.display = 'none';
+    if (modalCancel) {
+        modalCancel.textContent = 'OK';
+        modalCancel.onclick = hideModal;
+    }
+    confirmCallback = null;
+    modalOverlay.classList.add('show');
+}
+
+function showConfirmModal(message, onConfirm) {
+    if (!modalOverlay || !modalMessage || !modalButtons) return;
+    modalMessage.textContent = message;
+    if (modalConfirm) {
+        modalConfirm.style.display = 'inline-block';
+        modalConfirm.onclick = () => {
+            hideModal();
+            if (onConfirm) onConfirm();
+        };
+    }
+    if (modalCancel) {
+        modalCancel.textContent = 'Cancel';
+        modalCancel.onclick = hideModal;
+    }
+    confirmCallback = onConfirm;
+    modalOverlay.classList.add('show');
+}
+
+function hideModal() {
+    if (modalOverlay) {
+        modalOverlay.classList.remove('show');
+    }
+    if (modalConfirm) {
+        modalConfirm.style.display = 'inline-block';
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalOverlay?.classList.contains('show')) {
+        hideModal();
+    }
+});
+
+modalOverlay?.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) {
+        hideModal();
+    }
+});
 
 function init() {
     localStorage.removeItem('theme');
@@ -164,12 +222,12 @@ function addTask() {
         return;
     }
 
-    const isDuplicate = tasks.some(task => 
+    const isDuplicate = tasks.some(task =>
         task.text.toLowerCase() === text.toLowerCase()
     );
 
     if (isDuplicate) {
-        alert('This task already exists!');
+        showModal('This task already exists!');
         return;
     }
 
@@ -740,7 +798,7 @@ function saveTaskEdit(taskId) {
     );
 
     if (isDuplicate) {
-        alert('This task already exists!');
+        showModal('This task already exists!');
         return;
     }
 
@@ -795,26 +853,26 @@ function saveTaskEdit(taskId) {
 
 function clearCompleted() {
     const completedTasks = tasks.filter(task => task.completed);
-    
+
     if (completedTasks.length === 0) return;
 
-    if (!confirm(`Are you sure you want to delete ${completedTasks.length} completed task${completedTasks.length !== 1 ? 's' : ''}?`)) {
-        return;
-    }
+    const message = `Are you sure you want to delete ${completedTasks.length} completed task${completedTasks.length !== 1 ? 's' : ''}?`;
 
-    const completedElements = document.querySelectorAll('.task-text.completed');
-    completedElements.forEach(el => {
-        const taskItem = el.closest('.task-item');
-        if (taskItem) {
-            taskItem.style.animation = 'fadeOut 0.3s ease';
-        }
+    showConfirmModal(message, () => {
+        const completedElements = document.querySelectorAll('.task-text.completed');
+        completedElements.forEach(el => {
+            const taskItem = el.closest('.task-item');
+            if (taskItem) {
+                taskItem.style.animation = 'fadeOut 0.3s ease';
+            }
+        });
+
+        setTimeout(() => {
+            tasks = tasks.filter(task => !task.completed);
+            saveTasks();
+            renderTasks();
+        }, 300);
     });
-
-    setTimeout(() => {
-        tasks = tasks.filter(task => !task.completed);
-        saveTasks();
-        renderTasks();
-    }, 300);
 }
 
 const style = document.createElement('style');

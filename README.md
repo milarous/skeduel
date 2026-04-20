@@ -93,6 +93,7 @@ Open `index.html` in your browser to see Skeduel in action.
 14. **Daily Focus**: Navigate to view tasks for specific days using prev/next buttons
 15. **Add to Focus**: Drag a task from the task list to the Daily Focus panel to pin it for the day
 16. **Remove from Focus**: Click the × button on a focused task to remove it from the daily focus
+17. **Modal Dialogs**: Custom-styled modals for confirmations and alerts instead of browser dialogs
 
 ## Technologies
 
