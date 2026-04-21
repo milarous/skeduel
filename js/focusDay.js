@@ -1,10 +1,8 @@
 const FocusDay = {
-    STORAGE_PREFIX: 'focusDay-',
     currentFocusDate: new Date().toISOString().split('T')[0],
-    onDataChange: null,
 
     getKey(dateStr) {
-        return `${this.STORAGE_PREFIX}${dateStr}`;
+        return 'focusDay-' + dateStr;
     },
 
     get(dateStr) {
@@ -21,6 +19,7 @@ const FocusDay = {
     getOrCreate(dateStr) {
         const existing = this.get(dateStr);
         if (existing) {
+            existing.taskIds = existing.taskIds.map(id => String(id));
             return existing;
         }
         const newFocusDay = {
@@ -30,6 +29,12 @@ const FocusDay = {
         };
         this.save(dateStr, newFocusDay);
         return newFocusDay;
+    },
+
+    formatDate(dateStr) {
+        const date = new Date(dateStr);
+        const options = { month: 'short', day: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
     },
 
     formatDateDisplay(dateStr) {
@@ -45,8 +50,7 @@ const FocusDay = {
 
         if (dateOnly.getTime() === today.getTime()) {
             return 'Today';
-        }
-        if (dateOnly.getTime() === tomorrow.getTime()) {
+        } else if (dateOnly.getTime() === tomorrow.getTime()) {
             return 'Tomorrow';
         }
 
@@ -54,27 +58,16 @@ const FocusDay = {
         return date.toLocaleDateString('en-US', options);
     },
 
-    formatDueDate(dateStr) {
-        const date = new Date(dateStr);
-        const options = { month: 'short', day: 'numeric' };
-        return date.toLocaleDateString('en-US', options);
-    },
-
-    navigatePrev() {
-        const current = new Date(this.currentFocusDate);
-        current.setDate(current.getDate() - 1);
-        this.currentFocusDate = current.toISOString().split('T')[0];
-        this.render();
-    },
-
     getOtherActivePinnedDates(taskId) {
         const dates = [];
         const currentKey = this.getKey(this.currentFocusDate);
+        const taskIdStr = String(taskId);
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key && key.startsWith('focusDay-') && key !== currentKey) {
                 const focusDay = JSON.parse(localStorage.getItem(key));
-                if (focusDay?.taskIds?.includes(taskId)) {
+                const taskIds = focusDay?.taskIds?.map(id => String(id)) || [];
+                if (taskIds.includes(taskIdStr)) {
                     dates.push(key.replace('focusDay-', ''));
                 }
             }
@@ -85,11 +78,13 @@ const FocusDay = {
     getOtherNoteDates(taskId) {
         const dates = [];
         const currentKey = this.getKey(this.currentFocusDate);
+        const taskIdStr = String(taskId);
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key && key.startsWith('focusDay-') && key !== currentKey) {
                 const focusDay = JSON.parse(localStorage.getItem(key));
-                if (focusDay?.notes?.[taskId]) {
+                const notes = focusDay?.notes || {};
+                if (notes[taskIdStr]) {
                     dates.push(key.replace('focusDay-', ''));
                 }
             }
@@ -100,6 +95,19 @@ const FocusDay = {
     navigateNext() {
         const current = new Date(this.currentFocusDate);
         current.setDate(current.getDate() + 1);
+        this.currentFocusDate = current.toISOString().split('T')[0];
+        this.render();
+    },
+
+    navigatePrev() {
+        const current = new Date(this.currentFocusDate);
+        current.setDate(current.getDate() - 1);
+        this.currentFocusDate = current.toISOString().split('T')[0];
+        this.render();
+    },
+
+    navigateToday() {
+        const current = new Date();
         this.currentFocusDate = current.toISOString().split('T')[0];
         this.render();
     },
@@ -141,7 +149,7 @@ const FocusDay = {
         taskList.className = 'focus-task-list';
 
         taskIds.forEach(taskId => {
-            const task = tasks.find(t => t.id === taskId);
+            const task = tasks.find(t => String(t.id) === taskId);
             if (!task) return;
 
             const focusDay = this.getOrCreate(this.currentFocusDate);
@@ -151,6 +159,12 @@ const FocusDay = {
             const card = document.createElement('div');
             card.className = 'focus-task-card';
 
+            const titleRow = document.createElement('div');
+            titleRow.className = 'focus-task-title-row';
+
+            const titleWrapper = document.createElement('div');
+            titleWrapper.className = 'focus-task-title-wrapper';
+
             const titleSpan = document.createElement('span');
             titleSpan.className = 'focus-task-title';
             titleSpan.textContent = task.text;
@@ -158,59 +172,56 @@ const FocusDay = {
                 titleSpan.classList.add('completed');
             }
 
-            const titleRow = document.createElement('div');
-            titleRow.className = 'focus-task-title-row';
-
-            const titleWrapper = document.createElement('div');
-            titleWrapper.className = 'focus-task-title-wrapper';
-            titleWrapper.appendChild(titleSpan);
-
-            if (task.dueDate) {
-                const dueDateSpan = document.createElement('span');
-                dueDateSpan.className = 'focus-task-due-date';
-                dueDateSpan.textContent = '📅 ' + this.formatDueDate(task.dueDate);
-                titleWrapper.appendChild(dueDateSpan);
-            }
+            const moveBtn = document.createElement('button');
+            moveBtn.className = 'focus-task-move';
+            moveBtn.innerHTML = '&#10140;';
+            moveBtn.setAttribute('aria-label', 'Move to date');
+            moveBtn.dataset.taskId = taskId;
+            moveBtn.onclick = (e) => this.showMoveDialog(taskId, e);
 
             const removeBtn = document.createElement('button');
             removeBtn.className = 'focus-task-remove';
             removeBtn.innerHTML = '&times;';
-            removeBtn.setAttribute('aria-label', `Remove "${task.text}" from daily focus`);
+            removeBtn.setAttribute('aria-label', 'Remove from focus');
             removeBtn.onclick = () => this.removeTask(taskId);
 
+            titleWrapper.appendChild(titleSpan);
+            if (task.dueDate) {
+                const dueSpan = document.createElement('span');
+                dueSpan.className = 'due-date';
+                dueSpan.textContent = this.formatDate(task.dueDate);
+                titleWrapper.appendChild(dueSpan);
+            }
+
             titleRow.appendChild(titleWrapper);
+            titleRow.appendChild(moveBtn);
             titleRow.appendChild(removeBtn);
 
-            const noteTextarea = document.createElement('textarea');
-            noteTextarea.className = 'focus-task-note';
-            noteTextarea.placeholder = 'Add notes...';
-            noteTextarea.value = taskNote;
-            noteTextarea.rows = 2;
-            noteTextarea.addEventListener('blur', () => {
-                this.saveNote(taskId, noteTextarea.value);
+            const notesTextarea = document.createElement('textarea');
+            notesTextarea.className = 'focus-task-note';
+            notesTextarea.placeholder = 'Notes...';
+            notesTextarea.value = taskNote;
+            notesTextarea.dataset.taskId = taskId;
+            notesTextarea.addEventListener('blur', (e) => {
+                this.saveNote(taskId, e.target.value);
             });
 
             card.appendChild(titleRow);
-            card.appendChild(noteTextarea);
+            card.appendChild(notesTextarea);
+
             taskList.appendChild(card);
         });
 
         dropZone.appendChild(taskList);
     },
 
-    addTask(taskId, needsConfirmation = false) {
-        const otherActiveDates = this.getOtherActivePinnedDates(taskId);
+    addTask(taskId) {
+        const existingActiveDates = this.getOtherActivePinnedDates(taskId);
         const otherNoteDates = this.getOtherNoteDates(taskId);
+        const otherActiveDates = existingActiveDates;
 
-        if (otherActiveDates.length > 0 && needsConfirmation) {
-            const oldDateStr = otherActiveDates[0];
-            const oldDateDisplay = this.formatDateDisplay(oldDateStr);
-            const newDateDisplay = this.formatDateDisplay(this.currentFocusDate);
-            const message = `Task is pinned to ${oldDateDisplay}. Move to ${newDateDisplay}?`;
-
-            showConfirmModal(message, () => {
-                this.moveTaskToCurrentDate(taskId, oldDateStr);
-            });
+        if (otherActiveDates.length > 0) {
+            this.moveTaskToCurrentDate(taskId, otherActiveDates[0]);
             return;
         }
 
@@ -220,62 +231,34 @@ const FocusDay = {
         }
 
         const focusDay = this.getOrCreate(this.currentFocusDate);
-        if (!focusDay.taskIds.includes(taskId)) {
-            focusDay.taskIds.push(taskId);
+        const taskIdStr = String(taskId);
+        if (!focusDay.taskIds.includes(taskIdStr)) {
+            focusDay.taskIds.push(taskIdStr);
             this.save(this.currentFocusDate, focusDay);
             this.render();
             this.triggerDataChange();
         }
     },
 
-    getOtherActivePinnedDates(taskId) {
-        const dates = [];
-        const currentKey = this.getKey(this.currentFocusDate);
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('focusDay-') && key !== currentKey) {
-                const focusDay = JSON.parse(localStorage.getItem(key));
-                if (focusDay?.taskIds?.includes(taskId)) {
-                    dates.push(key.replace('focusDay-', ''));
-                }
-            }
-        }
-        return dates.sort();
-    },
-
-    getOtherNoteDates(taskId) {
-        const dates = [];
-        const currentKey = this.getKey(this.currentFocusDate);
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('focusDay-') && key !== currentKey) {
-                const focusDay = JSON.parse(localStorage.getItem(key));
-                if (focusDay?.notes?.[taskId]) {
-                    dates.push(key.replace('focusDay-', ''));
-                }
-            }
-        }
-        return dates.sort();
-    },
-
     moveTaskToCurrentDate(taskId, fromDateStr) {
+        const taskIdStr = String(taskId);
         const fromFocus = this.get(fromDateStr);
-        const note = fromFocus?.notes?.[taskId] || '';
+        const note = fromFocus?.notes?.[taskIdStr] || '';
 
         if (fromFocus && fromFocus.taskIds) {
-            fromFocus.taskIds = fromFocus.taskIds.filter(id => id !== taskId);
+            fromFocus.taskIds = fromFocus.taskIds.filter(id => String(id) !== taskIdStr);
             if (note && fromFocus.notes) {
-                delete fromFocus.notes[taskId];
+                delete fromFocus.notes[taskIdStr];
             }
             this.save(fromDateStr, fromFocus);
         }
 
         const toFocus = this.getOrCreate(this.currentFocusDate);
-        if (!toFocus.taskIds.includes(taskId)) {
-            toFocus.taskIds.push(taskId);
+        if (!toFocus.taskIds.includes(taskIdStr)) {
+            toFocus.taskIds.push(taskIdStr);
             if (note) {
                 if (!toFocus.notes) toFocus.notes = {};
-                toFocus.notes[taskId] = note;
+                toFocus.notes[taskIdStr] = note;
             }
             this.save(this.currentFocusDate, toFocus);
             this.render();
@@ -283,10 +266,163 @@ const FocusDay = {
         }
     },
 
+    moveTaskToDate(taskId, newDateStr) {
+        const currentDate = this.currentFocusDate;
+        const taskIdStr = String(taskId);
+
+        if (newDateStr === currentDate) {
+            this.closeMoveDialog();
+            return;
+        }
+
+        const fromFocus = this.getOrCreate(currentDate);
+        const note = fromFocus?.notes?.[taskIdStr] || '';
+
+        if (fromFocus && fromFocus.taskIds) {
+            fromFocus.taskIds = fromFocus.taskIds.filter(id => String(id) !== taskIdStr);
+            if (note && fromFocus.notes) {
+                delete fromFocus.notes[taskIdStr];
+            }
+            this.save(currentDate, fromFocus);
+        }
+
+        const toFocus = this.getOrCreate(newDateStr);
+        const toTaskIdsStr = toFocus.taskIds.map(id => String(id));
+        if (!toTaskIdsStr.includes(taskIdStr)) {
+            toFocus.taskIds.push(taskIdStr);
+            if (note) {
+                if (!toFocus.notes) toFocus.notes = {};
+                toFocus.notes[taskIdStr] = note;
+            }
+            this.save(newDateStr, toFocus);
+        }
+
+        this.closeMoveDialog();
+        this.render();
+        this.triggerDataChange();
+    },
+
+    showMoveDialog(taskId, event) {
+        const btn = event.target.closest('.focus-task-move');
+        if (!btn) return;
+
+        const rect = btn.getBoundingClientRect();
+        let topPos = rect.bottom + 5;
+        let rightPos = window.innerWidth - rect.right;
+
+        const existingDropdown = document.getElementById('move-dropdown-global');
+        if (existingDropdown) {
+            existingDropdown.remove();
+        }
+
+        const moveDropdown = document.createElement('div');
+        moveDropdown.className = 'focus-task-move-dropdown';
+        moveDropdown.id = 'move-dropdown-global';
+        moveDropdown.style.top = topPos + 'px';
+        moveDropdown.style.right = rightPos + 'px';
+        moveDropdown.dataset.taskId = taskId;
+
+        const dropdownHeader = document.createElement('div');
+        dropdownHeader.className = 'move-dropdown-header';
+        dropdownHeader.textContent = 'Move to...';
+
+        const dateOptions = document.createElement('div');
+        dateOptions.className = 'move-dropdown-options';
+
+        const todayBtn = document.createElement('button');
+        todayBtn.className = 'move-date-btn selected';
+        todayBtn.textContent = 'Today';
+        todayBtn.dataset.date = new Date().toISOString().split('T')[0];
+        todayBtn.onclick = () => {
+            document.querySelectorAll('#move-dropdown-global .move-date-btn').forEach(b => b.classList.remove('selected'));
+            todayBtn.classList.add('selected');
+            customDateInput.value = '';
+        };
+
+        const tomorrowBtn = document.createElement('button');
+        tomorrowBtn.className = 'move-date-btn';
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrowBtn.textContent = 'Tomorrow';
+        tomorrowBtn.dataset.date = tomorrow.toISOString().split('T')[0];
+        tomorrowBtn.onclick = () => {
+            document.querySelectorAll('#move-dropdown-global .move-date-btn').forEach(b => b.classList.remove('selected'));
+            tomorrowBtn.classList.add('selected');
+            customDateInput.value = '';
+        };
+
+        const customDateInput = document.createElement('input');
+        customDateInput.type = 'date';
+        customDateInput.className = 'move-date-input';
+        customDateInput.addEventListener('click', () => {
+            document.querySelectorAll('#move-dropdown-global .move-date-btn').forEach(b => b.classList.remove('selected'));
+        });
+
+        const confirmMoveBtn = document.createElement('button');
+        confirmMoveBtn.className = 'move-confirm-btn';
+        confirmMoveBtn.innerHTML = '&#10003;';
+        confirmMoveBtn.setAttribute('aria-label', 'Confirm move');
+        confirmMoveBtn.onclick = () => {
+            const taskId = document.getElementById('move-dropdown-global').dataset.taskId;
+            const selectedBtn = document.querySelector('#move-dropdown-global .move-date-btn.selected');
+            if (selectedBtn) {
+                this.moveTaskToDate(taskId, selectedBtn.dataset.date);
+            } else if (customDateInput.value) {
+                this.moveTaskToDate(taskId, customDateInput.value);
+            }
+            this.closeMoveDialog();
+        };
+
+        const cancelMoveBtn = document.createElement('button');
+        cancelMoveBtn.className = 'move-cancel-btn';
+        cancelMoveBtn.innerHTML = '&#10005;';
+        cancelMoveBtn.setAttribute('aria-label', 'Cancel move');
+        cancelMoveBtn.onclick = () => this.closeMoveDialog();
+
+        dateOptions.appendChild(todayBtn);
+        dateOptions.appendChild(tomorrowBtn);
+        dateOptions.appendChild(customDateInput);
+        dateOptions.appendChild(confirmMoveBtn);
+        dateOptions.appendChild(cancelMoveBtn);
+
+        moveDropdown.appendChild(dropdownHeader);
+        moveDropdown.appendChild(dateOptions);
+
+        document.body.appendChild(moveDropdown);
+
+        const closeMoveDialogHandler = (e) => {
+            if (moveDropdown.contains(e.target) || btn.contains(e.target)) {
+                return;
+            }
+            this.closeMoveDialog();
+        };
+
+        moveDropdown.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        setTimeout(() => {
+            document.addEventListener('click', closeMoveDialogHandler);
+        }, 0);
+
+        moveDropdown._closeHandler = closeMoveDialogHandler;
+    },
+
+    closeMoveDialog() {
+        const dropdown = document.getElementById('move-dropdown-global');
+        if (dropdown && dropdown._closeHandler) {
+            document.removeEventListener('click', dropdown._closeHandler);
+        }
+        if (dropdown) {
+            dropdown.remove();
+        }
+    },
+
     removeTask(taskId) {
+        const taskIdStr = String(taskId);
         const focusDay = this.get(this.currentFocusDate);
         if (focusDay && focusDay.taskIds) {
-            focusDay.taskIds = focusDay.taskIds.filter(id => id !== taskId);
+            focusDay.taskIds = focusDay.taskIds.filter(id => String(id) !== taskIdStr);
             this.save(this.currentFocusDate, focusDay);
             this.render();
             this.triggerDataChange();
@@ -294,14 +430,15 @@ const FocusDay = {
     },
 
     saveNote(taskId, noteText) {
+        const taskIdStr = String(taskId);
         const focusDay = this.getOrCreate(this.currentFocusDate);
         if (!focusDay.notes) {
             focusDay.notes = {};
         }
         if (noteText.trim()) {
-            focusDay.notes[taskId] = noteText;
+            focusDay.notes[taskIdStr] = noteText;
         } else {
-            delete focusDay.notes[taskId];
+            delete focusDay.notes[taskIdStr];
         }
         this.save(this.currentFocusDate, focusDay);
     },
@@ -328,29 +465,25 @@ const FocusDay = {
         dropZone.addEventListener('drop', (e) => {
             e.preventDefault();
             dropZone.classList.remove('drag-over');
-            const taskId = parseInt(e.dataTransfer.getData('text/plain'));
+            const taskId = e.dataTransfer.getData('text/plain');
             if (taskId) {
-                this.addTask(taskId, true);
+                this.addTask(taskId);
             }
         });
+
+        const prevBtn = document.getElementById('focus-prev');
+        if (prevBtn) {
+            prevBtn.onclick = () => this.navigatePrev();
+        }
+
+        const nextBtn = document.getElementById('focus-next');
+        if (nextBtn) {
+            nextBtn.onclick = () => this.navigateNext();
+        }
     },
 
     init() {
-        const prevBtn = document.getElementById('focus-prev');
-        const nextBtn = document.getElementById('focus-next');
-
-        if (prevBtn) {
-            prevBtn.addEventListener('click', () => this.navigatePrev());
-        }
-        if (nextBtn) {
-            nextBtn.addEventListener('click', () => this.navigateNext());
-        }
-
         this.setupDragListeners();
         this.render();
     }
 };
-
-document.addEventListener('DOMContentLoaded', () => {
-    FocusDay.init();
-});

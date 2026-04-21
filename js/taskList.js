@@ -7,11 +7,13 @@ const dueDateInput = document.getElementById('due-date-input');
 
 function getPinnedDates(taskId) {
     const dates = [];
+    const taskIdStr = String(taskId);
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith('focusDay-')) {
             const focusDay = JSON.parse(localStorage.getItem(key));
-            if (focusDay && focusDay.taskIds && focusDay.taskIds.includes(taskId)) {
+            const taskIds = focusDay?.taskIds?.map(id => String(id)) || [];
+            if (taskIds.includes(taskIdStr)) {
                 const dateStr = key.replace('focusDay-', '');
                 dates.push(dateStr);
             }
@@ -110,6 +112,7 @@ function init() {
         FocusDay.onDataChange = () => {
             renderTasks();
         };
+        FocusDay.init();
     }
 }
 

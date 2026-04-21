@@ -209,6 +209,130 @@ body {
     color: var(--danger);
 }
 
+.focus-task-move {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    line-height: 1;
+}
+
+.focus-task-move:hover {
+    color: var(--accent-color);
+}
+
+.focus-task-move-dropdown {
+    position: fixed;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.75rem;
+    z-index: 1000;
+    min-width: 300px;
+    box-shadow: var(--shadow-lg);
+}
+
+.move-dropdown-header {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.move-dropdown-options {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.move-date-btn {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    height: 38px;
+}
+
+.move-date-btn:hover {
+    border-color: var(--accent-primary);
+}
+
+.move-date-btn:focus,
+.move-date-btn.selected {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgb(129 140 248 / 0.2);
+}
+
+.move-date-btn.selected {
+    background-color: var(--accent-primary);
+    color: white;
+}
+
+.move-date-input {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.375rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    height: 38px;
+    outline: none;
+    box-sizing: border-box;
+    min-width: 130px;
+}
+
+.move-date-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgb(129 140 248 / 0.2);
+}
+
+.move-date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+}
+
+.move-confirm-btn,
+.move-cancel-btn {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+
+.move-confirm-btn {
+    color: var(--success);
+}
+
+.move-confirm-btn:hover {
+    background-color: var(--success);
+    color: white;
+    box-shadow: 0 0 12px rgb(74 222 128 / 0.5);
+}
+
+.move-cancel-btn {
+    color: var(--danger);
+}
+
+.move-cancel-btn:hover {
+    background-color: var(--danger);
+    color: white;
+    box-shadow: 0 0 12px rgb(248 113 113 / 0.5);
+}
+
 .focus-task-note {
     width: 100%;
     background-color: var(--bg-secondary);

@@ -38,7 +38,7 @@ Skeduel is a lightweight, browser-based task management application designed to 
 - ✅ **Collapsible Groups** - Date sections can be expanded/collapsed
 - ✅ **Task Recurring** - Set tasks to recur daily, weekly, monthly, or yearly with customizable intervals
 - ✅ **Recurrence Expiry** - Set tasks to expire after a specific date or number of completions
-- 🚧 **Daily Focus** - Daily focus panel with date navigation, drag tasks to add, remove from focus, notes, and time slots
+- ✅ **Daily Focus** - Daily focus panel with date navigation, drag tasks to add, remove from focus, notes, and move between days
 
 ## Demo
 
@@ -99,6 +99,9 @@ Open `index.html` in your browser to see Skeduel in action.
 20. **Duplicate Alert**: Tasks already pinned to another day show confirmation modal before moving
 21. **Daily Focus Updates**: Task name and due date changes reflect immediately in Daily Focus
 22. **Modal Dialogs**: Custom-styled modals for confirmations and alerts instead of browser dialogs
+23. **Move Task**: Click the → button on a focused task to move it to a different day
+24. **Move Options**: Choose Today, Tomorrow, or pick a custom date from the dropdown
+25. **Move Between Days**: Move a task directly from one focus day to another without removing first
 
 ## Technologies
 

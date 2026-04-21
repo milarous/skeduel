@@ -67,6 +67,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - saveTasks() calls FocusDay.render() on task changes
   - Due date shown in focus cards (📅 format)
   - formatDueDate() helper for displaying due dates
+- Move button (→) on focus task cards:
+  - Opens floating "Move to..." dropdown menu
+  - Today, Tomorrow, and custom date picker options
+  - Task can be moved directly between days without removing first
+  - Task name and due date update immediately on target day
+- Task card styling in Daily Focus:
+  - Title row with task name, due date, move button, and remove button
+  - Notes textarea below title row
+  - Styled to match app theme
 
 ### Changed
 - Refactored codebase into modular structure:
@@ -90,6 +99,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Recurrence interval/frequency change now resets start date and current instance
 - Expiry by count now expires on the correct completion (not one extra)
 - Expiry by date now checks the next occurrence's date, not today's date
+- Type mismatch bug with taskIds (string vs number) causing move between days to fail
+- Initial render not displaying tasks - added render() call in FocusDay.init()
+- Pin indicator not showing - fixed taskIds comparison to use string conversion
+- Move button onclick handler - ensure taskId is passed correctly via closure
+- Task card styling issues - added proper CSS class structure (title-row, title-wrapper)
+- Due date display in focus cards - formatted to match task list style (e.g., "Apr 21")
 
 ## [1.3.0] - 2026-04-17
 
