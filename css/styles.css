@@ -130,6 +130,71 @@ body {
     min-height: 200px;
 }
 
+.time-slots-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.time-slot-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.time-slot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.time-slot-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.time-slot-count {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-color);
+    background-color: rgba(129 140 248 / 0.15);
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--radius-sm);
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.time-slot-section .focus-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 40px;
+    padding: 0.25rem;
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border-color);
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.time-slot-section .focus-task-list.drag-over {
+    border-color: var(--accent-color);
+    background-color: rgba(129 140 248 / 0.05);
+}
+
+.time-slot-section .focus-task-list:empty::after {
+    content: 'Drop tasks here';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
 .focus-empty {
     display: flex;
     flex-direction: column;
@@ -169,6 +234,10 @@ body {
     padding: 0.75rem;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
+}
+
+.focus-task-card.dragging {
+    opacity: 0.5;
 }
 
 .focus-task-card > .focus-task-title-row {

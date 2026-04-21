@@ -39,6 +39,7 @@ Skeduel is a lightweight, browser-based task management application designed to 
 - ✅ **Task Recurring** - Set tasks to recur daily, weekly, monthly, or yearly with customizable intervals
 - ✅ **Recurrence Expiry** - Set tasks to expire after a specific date or number of completions
 - ✅ **Daily Focus** - Daily focus panel with date navigation, drag tasks to add, remove from focus, notes, and move between days
+  - **Time Slots** - Tasks grouped into Morning, Lunch, Afternoon, Late, and Unscheduled sessions
   - **Collapsible Notes** - Each task card has a collapsible notes section with 📝 Notes button
   - **Auto-Expanding Notes** - Notes textarea grows automatically as you type
 
@@ -104,8 +105,10 @@ Open `index.html` in your browser to see Skeduel in action.
 23. **Move Task**: Click the → button on a focused task to move it to a different day
 24. **Move Options**: Choose Today, Tomorrow, or pick a custom date from the dropdown
 25. **Move Between Days**: Move a task directly from one focus day to another without removing first
-26. **Collapse Notes**: Click the 📝 Notes button on a focus card to collapse/expand the notes section
-27. **Note Indicator**: When a note exists, the Notes button shows in accent color so you can see it without expanding
+26. **Time Slots**: Tasks in Daily Focus are organized into Morning, Lunch, Afternoon, Late, and Unscheduled sections
+27. **Drag to Time Slot**: Drag tasks between time slot sections to reorganize your day
+28. **Collapse Notes**: Click the 📝 Notes button on a focus card to collapse/expand the notes section
+29. **Note Indicator**: When a note exists, the Notes button shows in accent color so you can see it without expanding
 
 ## Technologies
 

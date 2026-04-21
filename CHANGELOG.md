@@ -8,11 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Time slots in Daily Focus:
+  - Tasks grouped into Morning (9-11), Lunch (11-1), Afternoon (1-3), Late (3-5), and Unscheduled sections
+  - Each section has its own drop zone for drag and drop
+  - Drag tasks between sections to change their time slot
+  - Task count badge displayed in each section header
+  - Drag task cards within Daily Focus to reorder across time slots
 - Collapsible notes section in Daily Focus cards:
   - 📝 Notes button in title row to collapse/expand notes
   - Rotating arrow indicator shows collapsed/expanded state
   - Accent color indicates when a note exists (visible at a glance)
   - Collapse state stored in memory only (resets on page refresh)
+  - Notes default to collapsed on page refresh
 - Auto-expanding textarea for notes:
   - Textarea grows automatically as you type
   - Height persisted in memory during session

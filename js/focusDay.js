@@ -3,6 +3,15 @@ const FocusDay = {
     collapsedNotes: {},
     noteHeights: {},
 
+    TIME_SLOTS: ['morning', 'lunch', 'afternoon', 'late', 'unscheduled'],
+    TIME_SLOT_LABELS: {
+        morning: 'Morning (9-11)',
+        lunch: 'Lunch (11-1)',
+        afternoon: 'Afternoon (1-3)',
+        late: 'Late (3-5)',
+        unscheduled: 'Unscheduled'
+    },
+
     getKey(dateStr) {
         return 'focusDay-' + dateStr;
     },
@@ -125,41 +134,96 @@ const FocusDay = {
 
     renderTasks() {
         const dropZone = document.getElementById('focus-drop-zone');
-        const emptyState = document.getElementById('focus-empty');
         if (!dropZone) return;
 
         const focusDay = this.getOrCreate(this.currentFocusDate);
         const taskIds = focusDay.taskIds || [];
 
-        const existingTaskList = dropZone.querySelector('.focus-task-list');
-        if (existingTaskList) {
-            existingTaskList.remove();
+        const existingSlotsContainer = dropZone.querySelector('.time-slots-container');
+        if (existingSlotsContainer) {
+            existingSlotsContainer.remove();
         }
 
-        if (taskIds.length === 0) {
-            if (emptyState) {
-                emptyState.style.display = 'flex';
+        const slotsContainer = document.createElement('div');
+        slotsContainer.className = 'time-slots-container';
+        slotsContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const list = e.target.closest('.focus-task-list');
+            if (list) {
+                e.dataTransfer.dropEffect = 'move';
+                list.classList.add('drag-over');
             }
-            return;
-        }
+        });
+        slotsContainer.addEventListener('dragleave', (e) => {
+            const list = e.target.closest('.focus-task-list');
+            if (list && e.relatedTarget && !list.contains(e.relatedTarget)) {
+                list.classList.remove('drag-over');
+            }
+        });
+        slotsContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const taskId = e.dataTransfer.getData('text/plain');
+            const list = e.target.closest('.focus-task-list');
+            if (list && taskId) {
+                list.classList.remove('drag-over');
+                const slot = list.dataset.slot;
+                this.addTaskToSlot(taskId, slot);
+            }
+        });
 
-        if (emptyState) {
-            emptyState.style.display = 'none';
-        }
+        this.TIME_SLOTS.forEach(slot => {
+            const section = document.createElement('div');
+            section.className = 'time-slot-section';
+            section.dataset.slot = slot;
 
-        const taskList = document.createElement('div');
-        taskList.className = 'focus-task-list';
+            const header = document.createElement('div');
+            header.className = 'time-slot-header';
+
+            const label = document.createElement('span');
+            label.className = 'time-slot-label';
+            label.textContent = this.TIME_SLOT_LABELS[slot];
+
+            const count = document.createElement('span');
+            count.className = 'time-slot-count';
+            count.dataset.slot = slot;
+
+            header.appendChild(label);
+            header.appendChild(count);
+
+            const taskList = document.createElement('div');
+            taskList.className = 'focus-task-list';
+            taskList.dataset.slot = slot;
+
+            section.appendChild(header);
+            section.appendChild(taskList);
+            slotsContainer.appendChild(section);
+        });
+
+        dropZone.appendChild(slotsContainer);
 
         taskIds.forEach(taskId => {
             const task = tasks.find(t => String(t.id) === taskId);
             if (!task) return;
 
-            const focusDay = this.getOrCreate(this.currentFocusDate);
+            const slot = focusDay.timeSlots?.[taskId] || 'unscheduled';
+            const taskList = slotsContainer.querySelector(`.focus-task-list[data-slot="${slot}"]`);
+            if (!taskList) return;
+
             const notes = focusDay.notes || {};
             const taskNote = notes[taskId] || '';
 
             const card = document.createElement('div');
             card.className = 'focus-task-card';
+            card.draggable = true;
+            card.dataset.taskId = taskId;
+            card.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', taskId);
+                e.dataTransfer.effectAllowed = 'move';
+                card.classList.add('dragging');
+            });
+            card.addEventListener('dragend', () => {
+                card.classList.remove('dragging');
+            });
 
             const titleRow = document.createElement('div');
             titleRow.className = 'focus-task-title-row';
@@ -201,7 +265,7 @@ const FocusDay = {
             collapseBtn.dataset.taskId = taskId;
             const hasNote = Boolean(taskNote);
             if (hasNote) collapseBtn.classList.add('has-note');
-            if (this.collapsedNotes[taskId]) collapseBtn.classList.add('collapsed');
+            if (this.collapsedNotes[taskId] !== false) collapseBtn.classList.add('collapsed');
             collapseBtn.innerHTML = '<span class="note-icon-text">📝 Notes</span><span class="note-icon-arrow">▼</span>';
             collapseBtn.onclick = () => this.toggleNoteCollapse(taskId);
 
@@ -212,7 +276,7 @@ const FocusDay = {
 
             const notesWrapper = document.createElement('div');
             notesWrapper.className = 'note-collapse-wrapper';
-            if (this.collapsedNotes[taskId]) notesWrapper.classList.add('collapsed');
+            if (this.collapsedNotes[taskId] !== false) notesWrapper.classList.add('collapsed');
             notesWrapper.dataset.taskId = taskId;
 
             const notesTextarea = document.createElement('textarea');
@@ -250,21 +314,80 @@ const FocusDay = {
             }, 0);
         });
 
-        dropZone.appendChild(taskList);
+        this.updateSlotCounts();
+    },
+
+    addTaskToSlot(taskId, slot) {
+        const taskIdStr = String(taskId);
+        const focusDay = this.getOrCreate(this.currentFocusDate);
+
+        if (!focusDay.taskIds.includes(taskIdStr)) {
+            const otherDates = this.getOtherActivePinnedDates(taskId);
+            if (otherDates.length > 0) {
+                this.moveTaskToCurrentDate(taskId, otherDates[0]);
+                if (!focusDay.timeSlots) focusDay.timeSlots = {};
+                focusDay.timeSlots[taskIdStr] = slot;
+                this.save(this.currentFocusDate, focusDay);
+                this.render();
+                this.triggerDataChange();
+                return;
+            }
+
+            const otherNoteDates = this.getOtherNoteDates(taskId);
+            if (otherNoteDates.length > 0) {
+                this.moveTaskToCurrentDate(taskId, otherNoteDates[0]);
+                if (!focusDay.timeSlots) focusDay.timeSlots = {};
+                focusDay.timeSlots[taskIdStr] = slot;
+                this.save(this.currentFocusDate, focusDay);
+                this.render();
+                this.triggerDataChange();
+                return;
+            }
+
+            focusDay.taskIds.push(taskIdStr);
+        }
+
+        if (!focusDay.timeSlots) focusDay.timeSlots = {};
+        focusDay.timeSlots[taskIdStr] = slot;
+        this.save(this.currentFocusDate, focusDay);
+        this.render();
+        this.triggerDataChange();
+    },
+
+    updateSlotCounts() {
+        const focusDay = this.get(this.currentFocusDate);
+        if (!focusDay) return;
+
+        this.TIME_SLOTS.forEach(slot => {
+            let count = 0;
+            focusDay.taskIds.forEach(taskId => {
+                const task = tasks.find(t => String(t.id) === taskId);
+                if (!task) return;
+                const slotForTask = focusDay.timeSlots?.[taskId] || 'unscheduled';
+                if (slotForTask === slot) {
+                    count++;
+                }
+            });
+            const countEl = document.querySelector(`.time-slot-count[data-slot="${slot}"]`);
+            if (countEl) {
+                countEl.textContent = count > 0 ? count : '';
+            }
+        });
     },
 
     addTask(taskId) {
         const existingActiveDates = this.getOtherActivePinnedDates(taskId);
         const otherNoteDates = this.getOtherNoteDates(taskId);
-        const otherActiveDates = existingActiveDates;
 
-        if (otherActiveDates.length > 0) {
-            this.moveTaskToCurrentDate(taskId, otherActiveDates[0]);
+        if (existingActiveDates.length > 0) {
+            this.moveTaskToCurrentDate(taskId, existingActiveDates[0]);
+            this.setTimeSlot(taskId, 'unscheduled');
             return;
         }
 
-        if (otherNoteDates.length > 0 && otherActiveDates.length === 0) {
+        if (otherNoteDates.length > 0 && existingActiveDates.length === 0) {
             this.moveTaskToCurrentDate(taskId, otherNoteDates[0]);
+            this.setTimeSlot(taskId, 'unscheduled');
             return;
         }
 
@@ -272,21 +395,26 @@ const FocusDay = {
         const taskIdStr = String(taskId);
         if (!focusDay.taskIds.includes(taskIdStr)) {
             focusDay.taskIds.push(taskIdStr);
+            this.setTimeSlot(taskId, 'unscheduled');
             this.save(this.currentFocusDate, focusDay);
             this.render();
             this.triggerDataChange();
         }
     },
 
-    moveTaskToCurrentDate(taskId, fromDateStr) {
+moveTaskToCurrentDate(taskId, fromDateStr) {
         const taskIdStr = String(taskId);
         const fromFocus = this.get(fromDateStr);
         const note = fromFocus?.notes?.[taskIdStr] || '';
+        const timeSlot = fromFocus?.timeSlots?.[taskIdStr] || 'unscheduled';
 
         if (fromFocus && fromFocus.taskIds) {
             fromFocus.taskIds = fromFocus.taskIds.filter(id => String(id) !== taskIdStr);
             if (note && fromFocus.notes) {
                 delete fromFocus.notes[taskIdStr];
+            }
+            if (fromFocus.timeSlots) {
+                delete fromFocus.timeSlots[taskIdStr];
             }
             this.save(fromDateStr, fromFocus);
         }
@@ -298,10 +426,12 @@ const FocusDay = {
                 if (!toFocus.notes) toFocus.notes = {};
                 toFocus.notes[taskIdStr] = note;
             }
+            if (!toFocus.timeSlots) toFocus.timeSlots = {};
+            toFocus.timeSlots[taskIdStr] = timeSlot;
             this.save(this.currentFocusDate, toFocus);
-            this.render();
-            this.triggerDataChange();
         }
+        this.render();
+        this.triggerDataChange();
     },
 
     moveTaskToDate(taskId, newDateStr) {
@@ -315,11 +445,15 @@ const FocusDay = {
 
         const fromFocus = this.getOrCreate(currentDate);
         const note = fromFocus?.notes?.[taskIdStr] || '';
+        const timeSlot = fromFocus?.timeSlots?.[taskIdStr] || 'unscheduled';
 
         if (fromFocus && fromFocus.taskIds) {
             fromFocus.taskIds = fromFocus.taskIds.filter(id => String(id) !== taskIdStr);
             if (note && fromFocus.notes) {
                 delete fromFocus.notes[taskIdStr];
+            }
+            if (fromFocus.timeSlots) {
+                delete fromFocus.timeSlots[taskIdStr];
             }
             this.save(currentDate, fromFocus);
         }
@@ -332,6 +466,8 @@ const FocusDay = {
                 if (!toFocus.notes) toFocus.notes = {};
                 toFocus.notes[taskIdStr] = note;
             }
+            if (!toFocus.timeSlots) toFocus.timeSlots = {};
+            toFocus.timeSlots[taskIdStr] = timeSlot;
             this.save(newDateStr, toFocus);
         }
 
@@ -489,6 +625,18 @@ const FocusDay = {
         return focusDay?.notes?.[String(taskId)] || '';
     },
 
+    getTimeSlot(taskId) {
+        const focusDay = this.getOrCreate(this.currentFocusDate);
+        return focusDay?.timeSlots?.[String(taskId)] || 'unscheduled';
+    },
+
+    setTimeSlot(taskId, slot) {
+        const focusDay = this.getOrCreate(this.currentFocusDate);
+        if (!focusDay.timeSlots) focusDay.timeSlots = {};
+        focusDay.timeSlots[String(taskId)] = slot;
+        this.save(this.currentFocusDate, focusDay);
+    },
+
     updateNoteIndicator(taskId) {
         const icon = document.querySelector(`.note-collapse-icon[data-task-id="${taskId}"]`);
         if (icon) {
@@ -498,17 +646,14 @@ const FocusDay = {
     },
 
     toggleNoteCollapse(taskId) {
-        this.collapsedNotes[taskId] = !this.collapsedNotes[taskId];
+        const isCurrentlyCollapsed = this.collapsedNotes[taskId] !== false;
+        this.collapsedNotes[taskId] = !isCurrentlyCollapsed;
         const wrapper = document.querySelector(`.note-collapse-wrapper[data-task-id="${taskId}"]`);
         const icon = document.querySelector(`.note-collapse-icon[data-task-id="${taskId}"]`);
         const textarea = document.querySelector(`.focus-task-note[data-task-id="${taskId}"]`);
-        if (wrapper) {
-            wrapper.classList.toggle('collapsed', this.collapsedNotes[taskId]);
-        }
-        if (icon) {
-            icon.classList.toggle('collapsed', this.collapsedNotes[taskId]);
-        }
-        if (textarea && !this.collapsedNotes[taskId] && textarea.value.trim()) {
+        wrapper?.classList.toggle('collapsed', !isCurrentlyCollapsed);
+        icon?.classList.toggle('collapsed', !isCurrentlyCollapsed);
+        if (textarea && isCurrentlyCollapsed && textarea.value.trim()) {
             textarea.style.height = 'auto';
             textarea.style.height = textarea.scrollHeight + 'px';
         }
@@ -521,27 +666,6 @@ const FocusDay = {
     },
 
     setupDragListeners() {
-        const dropZone = document.getElementById('focus-drop-zone');
-        if (!dropZone) return;
-
-        dropZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropZone.classList.add('drag-over');
-        });
-
-        dropZone.addEventListener('dragleave', () => {
-            dropZone.classList.remove('drag-over');
-        });
-
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.classList.remove('drag-over');
-            const taskId = e.dataTransfer.getData('text/plain');
-            if (taskId) {
-                this.addTask(taskId);
-            }
-        });
-
         const prevBtn = document.getElementById('focus-prev');
         if (prevBtn) {
             prevBtn.onclick = () => this.navigatePrev();
