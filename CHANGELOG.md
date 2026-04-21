@@ -49,6 +49,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Styled to match app theme with dark background and accent borders
   - Closes on Escape key or clicking outside modal
 - Replaced native alert() and confirm() dialogs with custom styled modals
+- Daily Focus task notes:
+  - Per-task textarea below task title in focus cards
+  - Saved on blur to focusDay.notes[taskId]
+  - Persists when task is removed from focus
+- Daily Focus pin indicator in task list:
+  - Tasks show 📌 + date when pinned to any focus day
+  - Uses getPinnedDates() to check all focus dates
+  - Shows most imminent pinned date
+- One focus day per task:
+  - getOtherPinnedDates() checks all focus days
+  - On drag: shows confirmation modal if task pinned elsewhere
+  - On remove + re-add: transfers note behind-the-scenes
+  - moveTaskToCurrentDate() moves task and notes
+  - getOtherActivePinnedDates() / getOtherNoteDates() separate checks
+- Task updates reflect in Daily Focus:
+  - saveTasks() calls FocusDay.render() on task changes
+  - Due date shown in focus cards (📅 format)
+  - formatDueDate() helper for displaying due dates
 
 ### Changed
 - Refactored codebase into modular structure:

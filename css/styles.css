@@ -155,18 +155,39 @@ body {
 
 .focus-task-card {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 0.5rem;
     background-color: var(--bg-primary);
     padding: 0.75rem;
     border-radius: var(--radius-md);
     border: 1px solid var(--border-color);
 }
 
+.focus-task-card > .focus-task-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
 .focus-task-title {
-    flex: 1;
     color: var(--text-primary);
     font-size: 0.875rem;
+}
+
+.focus-task-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.focus-task-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
 }
 
 .focus-task-title.completed {
@@ -181,12 +202,34 @@ body {
     font-size: 1.25rem;
     cursor: pointer;
     padding: 0 0.25rem;
-    margin-left: 0.5rem;
     line-height: 1;
 }
 
 .focus-task-remove:hover {
     color: var(--danger);
+}
+
+.focus-task-note {
+    width: 100%;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+
+.focus-task-note::placeholder {
+    color: var(--text-muted);
+}
+
+.focus-task-note:focus {
+    outline: none;
+    border-color: var(--accent-color);
 }
 
 .focus-drop-zone.drag-over {
@@ -547,6 +590,22 @@ body {
     margin-left: 0.25rem;
     display: inline-block;
     vertical-align: middle;
+}
+
+/* Focus indicator in task */
+.focus-indicator {
+    font-size: 0.75rem;
+    margin-left: 0.25rem;
+    color: var(--accent-color);
+    font-weight: 500;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.focus-task-due-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-left: 0.5rem;
 }
 
 .task-content {

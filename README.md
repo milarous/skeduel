@@ -93,7 +93,12 @@ Open `index.html` in your browser to see Skeduel in action.
 14. **Daily Focus**: Navigate to view tasks for specific days using prev/next buttons
 15. **Add to Focus**: Drag a task from the task list to the Daily Focus panel to pin it for the day
 16. **Remove from Focus**: Click the × button on a focused task to remove it from the daily focus
-17. **Modal Dialogs**: Custom-styled modals for confirmations and alerts instead of browser dialogs
+17. **Task Notes**: Add notes to pinned tasks in Daily Focus (saved on blur)
+18. **Pinned Indicator**: Tasks pinned to Daily Focus show a 📌 indicator in the task list
+19. **One Focus Day**: Task can only be pinned to one day - moving to another day transfers without confirmation
+20. **Duplicate Alert**: Tasks already pinned to another day show confirmation modal before moving
+21. **Daily Focus Updates**: Task name and due date changes reflect immediately in Daily Focus
+22. **Modal Dialogs**: Custom-styled modals for confirmations and alerts instead of browser dialogs
 
 ## Technologies
 

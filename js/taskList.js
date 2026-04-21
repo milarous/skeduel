@@ -4,6 +4,43 @@ const taskCount = document.getElementById('task-count');
 const clearCompletedBtn = document.getElementById('clear-completed');
 const newTaskInput = document.getElementById('new-task-input');
 const dueDateInput = document.getElementById('due-date-input');
+
+function getPinnedDates(taskId) {
+    const dates = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('focusDay-')) {
+            const focusDay = JSON.parse(localStorage.getItem(key));
+            if (focusDay && focusDay.taskIds && focusDay.taskIds.includes(taskId)) {
+                const dateStr = key.replace('focusDay-', '');
+                dates.push(dateStr);
+            }
+        }
+    }
+    return dates.sort();
+}
+
+function formatFocusDate(dateStr) {
+    const date = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+
+    if (dateOnly.getTime() === today.getTime()) {
+        return 'Today';
+    }
+    if (dateOnly.getTime() === tomorrow.getTime()) {
+        return 'Tomorrow';
+    }
+
+    const options = { month: 'short', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+}
 const modalOverlay = document.getElementById('modal-overlay');
 const modalMessage = document.getElementById('modal-message');
 const modalButtons = document.getElementById('modal-buttons');
@@ -68,6 +105,12 @@ function init() {
     localStorage.removeItem('sortingMode');
     renderTasks();
     setupEventListeners();
+
+    if (typeof FocusDay !== 'undefined') {
+        FocusDay.onDataChange = () => {
+            renderTasks();
+        };
+    }
 }
 
 function sortByDueDate(tasksToSort) {
@@ -466,6 +509,14 @@ function createTaskElement(task) {
         taskContent.appendChild(recurIcon);
     } else {
         taskContent.appendChild(span);
+    }
+
+    const pinnedDates = getPinnedDates(task.id);
+    if (pinnedDates.length > 0) {
+        const focusIndicator = document.createElement('span');
+        focusIndicator.className = 'focus-indicator';
+        focusIndicator.textContent = '📌 ' + formatFocusDate(pinnedDates[0]);
+        taskContent.appendChild(focusIndicator);
     }
 
     const taskActions = document.createElement('div');

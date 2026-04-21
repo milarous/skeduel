@@ -75,6 +75,7 @@ const RecurrenceEngine = {
 
 function saveTasks() {
     localStorage.setItem('tasks', JSON.stringify(tasks));
+    if (typeof FocusDay !== 'undefined') FocusDay.render();
 }
 
 function saveCollapsedGroups() {
