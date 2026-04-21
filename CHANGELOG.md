@@ -8,6 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Collapsible notes section in Daily Focus cards:
+  - 📝 Notes button in title row to collapse/expand notes
+  - Rotating arrow indicator shows collapsed/expanded state
+  - Accent color indicates when a note exists (visible at a glance)
+  - Collapse state stored in memory only (resets on page refresh)
+- Auto-expanding textarea for notes:
+  - Textarea grows automatically as you type
+  - Height persisted in memory during session
+  - Minimum height of 36px ensures placeholder visibility
+  - No scrollbar needed - content flows naturally
+
+### Changed
+- Task name font size in Daily Focus cards increased to match task list (1rem)
+- Prev/Next navigation buttons styled to match Add Task button
+- Notes textarea uses auto-expanding height with no scrollbar
+
+### Fixed
+- N/A
+
+## [1.4.0] - 2026-04-21
+
+### Added
 - Daily Focus feature (data layer implemented, UI built)
   - FocusDay storage module with localStorage persistence keyed by date (YYYY-MM-DD)
   - FocusDay data structure: taskIds, notes (keyed by taskId), timeSlots (keyed by taskId)
@@ -48,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - showConfirmModal(message, onConfirm) for confirmations with Confirm/Cancel buttons
   - Styled to match app theme with dark background and accent borders
   - Closes on Escape key or clicking outside modal
-- Replaced native alert() and confirm() dialogs with custom styled modals
+  - Replaced native alert() and confirm() dialogs with custom styled modals
 - Daily Focus task notes:
   - Per-task textarea below task title in focus cards
   - Saved on blur to focusDay.notes[taskId]
@@ -204,6 +226,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 1.4.0 | 2026-04-21 | Added Daily Focus panel with drag-and-drop task pinning, recurrence, and modals |
 | 1.3.0 | 2026-04-17 | Added task editing, dark mode only, optimized colors |
 | 1.2.0 | 2026-03-19 | Added drag and drop task reordering with sorting functionality |
 | 1.1.0 | 2026-03-19 | Added due date functionality with overdue highlighting |

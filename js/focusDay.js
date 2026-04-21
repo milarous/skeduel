@@ -1,5 +1,7 @@
 const FocusDay = {
     currentFocusDate: new Date().toISOString().split('T')[0],
+    collapsedNotes: {},
+    noteHeights: {},
 
     getKey(dateStr) {
         return 'focusDay-' + dateStr;
@@ -193,23 +195,59 @@ const FocusDay = {
                 titleWrapper.appendChild(dueSpan);
             }
 
+            const collapseBtn = document.createElement('button');
+            collapseBtn.className = 'note-collapse-icon';
+            collapseBtn.setAttribute('aria-label', 'Toggle notes');
+            collapseBtn.dataset.taskId = taskId;
+            const hasNote = Boolean(taskNote);
+            if (hasNote) collapseBtn.classList.add('has-note');
+            if (this.collapsedNotes[taskId]) collapseBtn.classList.add('collapsed');
+            collapseBtn.innerHTML = '<span class="note-icon-text">📝 Notes</span><span class="note-icon-arrow">▼</span>';
+            collapseBtn.onclick = () => this.toggleNoteCollapse(taskId);
+
             titleRow.appendChild(titleWrapper);
+            titleRow.appendChild(collapseBtn);
             titleRow.appendChild(moveBtn);
             titleRow.appendChild(removeBtn);
+
+            const notesWrapper = document.createElement('div');
+            notesWrapper.className = 'note-collapse-wrapper';
+            if (this.collapsedNotes[taskId]) notesWrapper.classList.add('collapsed');
+            notesWrapper.dataset.taskId = taskId;
 
             const notesTextarea = document.createElement('textarea');
             notesTextarea.className = 'focus-task-note';
             notesTextarea.placeholder = 'Notes...';
             notesTextarea.value = taskNote;
             notesTextarea.dataset.taskId = taskId;
+            notesTextarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+                FocusDay.noteHeights[taskId] = this.scrollHeight;
+            });
             notesTextarea.addEventListener('blur', (e) => {
                 this.saveNote(taskId, e.target.value);
+                if (!e.target.value.trim()) {
+                    delete FocusDay.noteHeights[taskId];
+                }
             });
 
+            notesWrapper.appendChild(notesTextarea);
             card.appendChild(titleRow);
-            card.appendChild(notesTextarea);
+            card.appendChild(notesWrapper);
 
             taskList.appendChild(card);
+
+            setTimeout(() => {
+                const storedHeight = FocusDay.noteHeights[taskId];
+                if (storedHeight) {
+                    notesTextarea.style.height = storedHeight + 'px';
+                } else if (taskNote.trim()) {
+                    notesTextarea.style.height = 'auto';
+                    notesTextarea.style.height = notesTextarea.scrollHeight + 'px';
+                    FocusDay.noteHeights[taskId] = notesTextarea.scrollHeight;
+                }
+            }, 0);
         });
 
         dropZone.appendChild(taskList);
@@ -424,6 +462,8 @@ const FocusDay = {
         if (focusDay && focusDay.taskIds) {
             focusDay.taskIds = focusDay.taskIds.filter(id => String(id) !== taskIdStr);
             this.save(this.currentFocusDate, focusDay);
+            delete this.collapsedNotes[taskId];
+            delete this.noteHeights[taskId];
             this.render();
             this.triggerDataChange();
         }
@@ -441,6 +481,37 @@ const FocusDay = {
             delete focusDay.notes[taskIdStr];
         }
         this.save(this.currentFocusDate, focusDay);
+        this.updateNoteIndicator(taskId);
+    },
+
+    getNote(taskId) {
+        const focusDay = this.get(this.currentFocusDate);
+        return focusDay?.notes?.[String(taskId)] || '';
+    },
+
+    updateNoteIndicator(taskId) {
+        const icon = document.querySelector(`.note-collapse-icon[data-task-id="${taskId}"]`);
+        if (icon) {
+            const hasNote = Boolean(this.getNote(taskId));
+            icon.classList.toggle('has-note', hasNote);
+        }
+    },
+
+    toggleNoteCollapse(taskId) {
+        this.collapsedNotes[taskId] = !this.collapsedNotes[taskId];
+        const wrapper = document.querySelector(`.note-collapse-wrapper[data-task-id="${taskId}"]`);
+        const icon = document.querySelector(`.note-collapse-icon[data-task-id="${taskId}"]`);
+        const textarea = document.querySelector(`.focus-task-note[data-task-id="${taskId}"]`);
+        if (wrapper) {
+            wrapper.classList.toggle('collapsed', this.collapsedNotes[taskId]);
+        }
+        if (icon) {
+            icon.classList.toggle('collapsed', this.collapsedNotes[taskId]);
+        }
+        if (textarea && !this.collapsedNotes[taskId] && textarea.value.trim()) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
     },
 
     triggerDataChange() {
