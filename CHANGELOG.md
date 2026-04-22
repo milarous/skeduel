@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Daily Focus navigation restrictions:
+  - Cannot navigate to past dates - navigatePrev() guard prevents it
+  - Prev button disabled on Today (greyed out, acts as placeholder to keep date centered)
+- Find button in Daily Focus:
+  - Pin indicator in task list is now a clickable button
+  - Click to navigate to the pinned date in Daily Focus panel
+  - Task highlights with double glow flash animation when found
 - Time slots in Daily Focus:
   - Tasks grouped into Morning (9-11), Lunch (11-1), Afternoon (1-3), Late (3-5), and Unscheduled sections
   - Each section has its own drop zone for drag and drop

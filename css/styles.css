@@ -97,7 +97,15 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+.focus-date {
+    flex: 1;
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
 .focus-nav-btn {
+    flex-shrink: 0;
     background-color: var(--accent-primary);
     color: white;
     border: none;
@@ -120,9 +128,11 @@ body {
     transform: translateY(0);
 }
 
-.focus-date {
-    font-weight: 600;
-    color: var(--text-primary);
+.focus-nav-btn:disabled {
+    background-color: var(--border-color);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .focus-drop-zone {
@@ -852,6 +862,33 @@ body {
     font-weight: 500;
     display: inline-block;
     vertical-align: middle;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.focus-indicator:hover {
+    text-decoration: underline;
+}
+
+.focus-task-card.highlight {
+    animation: focus-highlight 1.5s ease-out;
+}
+
+@keyframes focus-highlight {
+    0%, 100% {
+        box-shadow: none;
+        background-color: transparent;
+    }
+    25%, 75% {
+        box-shadow: 0 0 20px var(--accent-color), 0 0 40px var(--accent-color);
+        background-color: rgba(129, 140, 248, 0.3);
+    }
+    50% {
+        box-shadow: none;
+        background-color: transparent;
+    }
 }
 
 .focus-task-due-date {

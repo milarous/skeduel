@@ -39,6 +39,8 @@ Skeduel is a lightweight, browser-based task management application designed to 
 - ✅ **Task Recurring** - Set tasks to recur daily, weekly, monthly, or yearly with customizable intervals
 - ✅ **Recurrence Expiry** - Set tasks to expire after a specific date or number of completions
 - ✅ **Daily Focus** - Daily focus panel with date navigation, drag tasks to add, remove from focus, notes, and move between days
+  - **Cannot View Past** - Navigation restricted to today and future dates only
+  - **Find Pinned Task** - Click the 📌 pin indicator in task list to jump to that task in Daily Focus
   - **Time Slots** - Tasks grouped into Morning, Lunch, Afternoon, Late, and Unscheduled sessions
   - **Collapsible Notes** - Each task card has a collapsible notes section with 📝 Notes button
   - **Auto-Expanding Notes** - Notes textarea grows automatically as you type

@@ -111,6 +111,9 @@ const FocusDay = {
     },
 
     navigatePrev() {
+        const today = new Date().toISOString().split('T')[0];
+        if (this.currentFocusDate === today) return;
+
         const current = new Date(this.currentFocusDate);
         current.setDate(current.getDate() - 1);
         this.currentFocusDate = current.toISOString().split('T')[0];
@@ -129,7 +132,16 @@ const FocusDay = {
             dateDisplay.textContent = this.formatDateDisplay(this.currentFocusDate);
         }
 
+        this.updatePrevButtonState();
         this.renderTasks();
+    },
+
+    updatePrevButtonState() {
+        const prevBtn = document.getElementById('focus-prev');
+        if (!prevBtn) return;
+        const today = new Date().toISOString().split('T')[0];
+        const isToday = this.currentFocusDate === today;
+        prevBtn.disabled = isToday;
     },
 
     renderTasks() {

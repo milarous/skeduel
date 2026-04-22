@@ -516,9 +516,23 @@ function createTaskElement(task) {
 
     const pinnedDates = getPinnedDates(task.id);
     if (pinnedDates.length > 0) {
-        const focusIndicator = document.createElement('span');
+        const focusIndicator = document.createElement('button');
         focusIndicator.className = 'focus-indicator';
         focusIndicator.textContent = '📌 ' + formatFocusDate(pinnedDates[0]);
+        focusIndicator.setAttribute('aria-label', 'Go to pinned date');
+        const pinnedDate = pinnedDates[0];
+        focusIndicator.onclick = () => {
+            FocusDay.currentFocusDate = pinnedDate;
+            FocusDay.render();
+            setTimeout(() => {
+                const card = document.querySelector(`.focus-task-card[data-task-id="${task.id}"]`);
+                if (card) {
+                    card.classList.add('highlight');
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setTimeout(() => card.classList.remove('highlight'), 1500);
+                }
+            }, 100);
+        };
         taskContent.appendChild(focusIndicator);
     }
 
