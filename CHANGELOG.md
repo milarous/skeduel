@@ -8,7 +8,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Daily Focus navigation restrictions:
+- Flask backend (`server.py`) with routes:
+  - `GET /` - serves index.html
+  - `GET /api/data` - returns task data from skeduel-data.json
+  - `POST /api/data` - saves task data to skeduel-data.json
+- Local JSON file storage (`skeduel-data.json`)
+- Project structure refactored for Flask:
+  - `templates/index.html` - HTML template with Jinja2 url_for() syntax
+  - `static/css/` and `static/js/` - static assets
+- `skeduel-data.json` added to .gitignore
+
+### Changed
+- Storage migration note added to README
+
+### Fixed
+- N/A
+
+### Deprecated
+- N/A
+
+### Removed
+- Direct file access to index.html, css/, js/ at root level
+
+### Security
+- N/A
+
+## [1.4.0] - 2026-04-21
   - Cannot navigate to past dates - navigatePrev() guard prevents it
   - Prev button disabled on Today (greyed out, acts as placeholder to keep date centered)
 - Find button in Daily Focus:

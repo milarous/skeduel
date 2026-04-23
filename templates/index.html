@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Skeduel - Task Manager</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
     <div class="app-container">
@@ -109,8 +109,8 @@
         </div>
     </div>
 
-    <script src="js/data.js" defer></script>
-    <script src="js/focusDay.js" defer></script>
-    <script src="js/taskList.js" defer></script>
+    <script src="{{ url_for('static', filename='js/data.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/focusDay.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/taskList.js') }}" defer></script>
 </body>
 </html>

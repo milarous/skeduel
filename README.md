@@ -47,14 +47,31 @@ Skeduel is a lightweight, browser-based task management application designed to 
 
 ## Demo
 
-Open `index.html` in your browser to see Skeduel in action.
+Run the Flask server and open `http://localhost:5000` in your browser.
+
+## Project Structure
+
+```
+skeduel/
+├── server.py              # Flask application
+├── skeduel-data.json      # Task data storage (gitignored)
+├── templates/
+│   └── index.html         # Main HTML template
+└── static/
+    ├── css/
+    │   └── styles.css     # Application styles
+    └── js/
+        ├── data.js        # Data layer
+        ├── focusDay.js    # Daily Focus module
+        └── taskList.js    # Task list UI
+```
 
 ## Getting Started
 
 ### Prerequisites
 
-- A modern web browser (Chrome, Firefox, Safari, Edge)
-- No server required - runs entirely in the browser
+- Python 3.8+
+- Flask (see requirements.txt)
 
 ### Installation
 
@@ -68,17 +85,26 @@ Open `index.html` in your browser to see Skeduel in action.
    cd skeduel
    ```
 
-3. Open `index.html` in your browser:
+3. Create and activate a virtual environment:
    ```bash
-   # On macOS
-   open index.html
-   
-   # On Linux
-   xdg-open index.html
-   
-   # On Windows
-   start index.html
+   python -m venv .venv
+   source .venv/bin/activate  # Linux/macOS
+   .venv\Scripts\activate     # Windows
    ```
+
+4. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. Run the server:
+   ```bash
+   flask run --app server.py
+   # or
+   python server.py
+   ```
+
+6. Open http://localhost:5000 in your browser
 
 ## Usage
 
@@ -112,12 +138,17 @@ Open `index.html` in your browser to see Skeduel in action.
 28. **Collapse Notes**: Click the 📝 Notes button on a focus card to collapse/expand the notes section
 29. **Note Indicator**: When a note exists, the Notes button shows in accent color so you can see it without expanding
 
+## Storage
+
+> ⚠️ **Note**: Storage is currently migrating from browser localStorage to a local JSON file (`skeduel-data.json` via `/api/data`). This migration is under construction.
+
 ## Technologies
 
+- **Python** - Flask web framework
 - **HTML5** - Semantic markup structure
 - **CSS3** - Modern styling with CSS variables for theming
-- **JavaScript (ES6+)** - Dynamic functionality and local storage
-- **No external dependencies** - Pure vanilla implementation
+- **JavaScript (ES6+)** - Dynamic functionality
+- **JSON** - Local file storage
 
 ## Contributing
 

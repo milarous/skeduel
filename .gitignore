@@ -29,6 +29,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.venv/
 
 # OS files
 .DS_Store
@@ -45,6 +46,9 @@ coverage/
 # Cache
 .cache/
 .parcel-cache/
+
+# Local data
+skeduel-data.json
 
 # Temporary files
 tmp/
