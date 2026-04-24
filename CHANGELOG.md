@@ -8,6 +8,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Subtasks functionality - break down tasks into smaller subtasks:
+  - Subtask data model: each task has `subtasks[]` array with objects containing:
+    - `id` (timestamp), `text`, `completed` (bool), `completedDate` (nullable)
+  - Subtasks inherit dueDate from parent task (not stored separately)
+  - saveTasks() includes subtask migration for existing tasks
+- Subtask toggle button in task actions:
+  - Shows "☰ Add" when no subtasks exist
+  - Shows "☰ X/Y" (completed/total) when subtasks exist
+  - Toggles collapsible subtask section below parent task
+- Subtask section UI:
+  - Collapsible section expands/collapses on button click
+  - Section uses secondary background color for visual distinction
+  - Contains list of subtasks with checkboxes and tree branch indicator (↳)
+  - Input field to add new subtasks (press Enter)
+- Subtask behaviors:
+  - Parent task completion marks all subtasks complete (not vice versa)
+  - Subtask completion tracks completedDate timestamp
+  - Toggle and delete subtask buttons with hover effects
+  - Edit button opens inline input to edit subtask text
+  - Subtask buttons show on parent task hover
+- Tree view indicator:
+  - Each subtask shows ↳ branch icon on the left
+  - Checkbox follows the branch
+  - Edit and delete buttons on the right
+- Styling:
+  - Azure blue (#6693F5) toggle button on hover with glow
+  - Red delete button on hover with glow
+  - Blue edit button on hover with glow
+  - Header padding: 6px bottom for app-header, 6px bottom/12px left for column-header
+- Functions added:
+  - `addSubtask(taskId, text)` - adds new subtask to task
+  - `toggleSubtask(taskId, subtaskId)` - toggles subtask completion
+  - `deleteSubtask(taskId, subtaskId)` - removes subtask
+  - `editSubtask(taskId, subtaskId)` - enables inline editing
+  - `toggleSubtaskCollapse(taskId)` - toggles section visibility
+  - `collapsedSubtasks` state persisted to storage
 - Flask backend (`server.py`) with routes:
   - `GET /` - serves index.html
   - `GET /api/data` - returns task data from skeduel-data.json

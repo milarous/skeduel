@@ -4,6 +4,16 @@ const taskCount = document.getElementById('task-count');
 const clearCompletedBtn = document.getElementById('clear-completed');
 const newTaskInput = document.getElementById('new-task-input');
 const dueDateInput = document.getElementById('due-date-input');
+window.collapsedSubtasks = window.collapsedSubtasks || {};
+
+function toggleSubtaskCollapse(taskId) {
+    if (window.collapsedSubtasks[taskId] === undefined) {
+        window.collapsedSubtasks[taskId] = false; // open after first click
+    } else {
+        window.collapsedSubtasks[taskId] = !window.collapsedSubtasks[taskId];
+    }
+    renderTasks();
+}
 
 function getPinnedDates(taskId) {
     const dates = [];
@@ -106,6 +116,7 @@ async function init() {
     const data = await Storage.load();
     tasks = data.tasks || [];
     collapsedGroups = data.collapsedGroups || {};
+    window.collapsedSubtasks = window.collapsedSubtasks || {};
 
     document.getElementById('loading-overlay')?.classList.add('loading-hidden');
 
@@ -305,7 +316,8 @@ function addTask() {
         completed: false,
         createdAt: new Date().toISOString(),
         dueDate: dueDateInput.value || null,
-        recurrence
+        recurrence,
+        subtasks: []
     };
 
     tasks.unshift(newTask);
@@ -455,6 +467,103 @@ function createDateHeader(title, count, groupId, isCollapsed = false, isOverdue 
     return header;
 }
 
+function addSubtask(taskId, text) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || !text.trim()) return;
+
+    if (!task.subtasks) task.subtasks = [];
+
+    task.subtasks.push({
+        id: Date.now(),
+        text: text.trim(),
+        completed: false,
+        completedDate: null
+    });
+
+    saveTasks();
+    renderTasks();
+}
+
+function toggleSubtask(taskId, subtaskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || !task.subtasks) return;
+
+    const subtask = task.subtasks.find(s => s.id === subtaskId);
+    if (!subtask) return;
+
+    subtask.completed = !subtask.completed;
+    subtask.completedDate = subtask.completed ? new Date().toISOString() : null;
+
+    saveTasks();
+    renderTasks();
+}
+
+function editSubtask(taskId, subtaskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || !task.subtasks) return;
+
+    const subtask = task.subtasks.find(s => s.id === subtaskId);
+    if (!subtask) return;
+
+    const subtaskElement = document.querySelector(`.subtask-item input[value="${subtaskId}"]`)?.closest('.subtask-item') || 
+                         [...document.querySelectorAll('.subtask-item')].find(li => li.querySelector(`[data-subtask-id="${subtaskId}"]`));
+    if (!subtaskElement) return;
+
+    const subtaskText = subtaskElement.querySelector('.subtask-text');
+    const subtaskCheckbox = subtaskElement.querySelector('.subtask-checkbox');
+    const subtaskEdit = subtaskElement.querySelector('.subtask-edit');
+    const subtaskDelete = subtaskElement.querySelector('.subtask-delete');
+    
+    if (!subtaskText) return;
+
+    const originalText = subtask.text;
+
+    const editInput = document.createElement('input');
+    editInput.type = 'text';
+    editInput.className = 'subtask-edit-input';
+    editInput.value = originalText;
+    editInput.style.flex = '1';
+    editInput.style.fontSize = '0.875rem';
+    editInput.style.padding = '4px';
+    editInput.style.border = '1px solid var(--border-color)';
+    editInput.style.borderRadius = 'var(--radius-sm)';
+    editInput.style.backgroundColor = 'var(--bg-primary)';
+    editInput.style.color = 'var(--text-primary)';
+
+    const saveEdit = () => {
+        const newText = editInput.value.trim();
+        if (newText && newText !== originalText) {
+            subtask.text = newText;
+            saveTasks();
+            renderTasks();
+        } else {
+            renderTasks();
+        }
+    };
+
+    const cancelEdit = () => {
+        renderTasks();
+    };
+
+    editInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            saveEdit();
+        } else if (e.key === 'Escape') {
+            cancelEdit();
+        }
+    });
+
+    editInput.addEventListener('blur', saveEdit);
+
+    subtaskText.replaceWith(editInput);
+    if (subtaskCheckbox) subtaskCheckbox.style.display = 'none';
+    if (subtaskEdit) subtaskEdit.style.display = 'none';
+    if (subtaskDelete) subtaskDelete.style.display = 'none';
+
+    editInput.focus();
+    editInput.select();
+}
+
 function createTaskElement(task) {
     const li = document.createElement('li');
     li.className = 'task-item';
@@ -543,6 +652,20 @@ function createTaskElement(task) {
     const taskActions = document.createElement('div');
     taskActions.className = 'task-actions';
 
+    const subtaskToggleBtn = document.createElement('button');
+    subtaskToggleBtn.className = 'subtask-toggle-btn';
+    const completedCount = task.subtasks ? task.subtasks.filter(s => s.completed).length : 0;
+    const totalCount = task.subtasks ? task.subtasks.length : 0;
+    subtaskToggleBtn.innerHTML = `☰ ${totalCount > 0 ? completedCount + '/' + totalCount : 'Add'}`;
+    subtaskToggleBtn.setAttribute('aria-label', 'Toggle subtasks');
+    subtaskToggleBtn.onclick = (e) => {
+        e.stopPropagation();
+        toggleSubtaskCollapse(task.id);
+    };
+    if (totalCount > 0) {
+        subtaskToggleBtn.classList.add('has-subtasks');
+    }
+
     const editBtn = document.createElement('button');
     editBtn.className = 'edit-btn';
     editBtn.innerHTML = '&#9998;';
@@ -561,12 +684,88 @@ function createTaskElement(task) {
         deleteTask(task.id);
     };
 
+    taskActions.appendChild(subtaskToggleBtn);
     taskActions.appendChild(editBtn);
     taskActions.appendChild(deleteBtn);
 
     li.appendChild(checkbox);
     li.appendChild(taskContent);
     li.appendChild(taskActions);
+
+    if (task.subtasks) {
+        const completedCount = task.subtasks.filter(s => s.completed).length;
+        const totalCount = task.subtasks.length;
+        const isCollapsed = window.collapsedSubtasks[task.id] !== false;
+
+        const subtaskSection = document.createElement('div');
+        subtaskSection.className = 'subtasks-section';
+
+        const subtaskWrapper = document.createElement('div');
+        subtaskWrapper.className = `subtasks-list-wrapper ${isCollapsed ? 'collapsed' : ''}`;
+
+        if (task.subtasks.length > 0) {
+            const subtaskList = document.createElement('ul');
+            subtaskList.className = 'subtask-list';
+
+task.subtasks.forEach(subtask => {
+                const subtaskLi = document.createElement('li');
+                subtaskLi.className = 'subtask-item';
+                subtaskLi.dataset.subtaskId = subtask.id;
+
+                const subtaskCheckbox = document.createElement('input');
+                subtaskCheckbox.type = 'checkbox';
+                subtaskCheckbox.className = 'subtask-checkbox';
+                subtaskCheckbox.checked = subtask.completed;
+                subtaskCheckbox.onchange = () => toggleSubtask(task.id, subtask.id);
+
+                const subtaskText = document.createElement('span');
+                subtaskText.className = 'subtask-text';
+                subtaskText.textContent = subtask.text;
+                subtaskText.dataset.subtaskId = subtask.id;
+                if (subtask.completed) subtaskText.classList.add('completed');
+
+                const subtaskEdit = document.createElement('button');
+                subtaskEdit.className = 'subtask-edit';
+                subtaskEdit.innerHTML = '&#9998;';
+                subtaskEdit.onclick = (e) => {
+                    e.stopPropagation();
+                    editSubtask(task.id, subtask.id);
+                };
+
+                const subtaskDelete = document.createElement('button');
+                subtaskDelete.className = 'delete-btn subtask-delete';
+                subtaskDelete.innerHTML = '×';
+                subtaskDelete.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteSubtask(task.id, subtask.id);
+                };
+
+                subtaskLi.appendChild(subtaskCheckbox);
+                subtaskLi.appendChild(subtaskText);
+                subtaskLi.appendChild(subtaskEdit);
+                subtaskLi.appendChild(subtaskDelete);
+                subtaskList.appendChild(subtaskLi);
+            });
+
+            subtaskWrapper.appendChild(subtaskList);
+        }
+
+        const subtaskInput = document.createElement('input');
+        subtaskInput.type = 'text';
+        subtaskInput.className = 'subtask-input';
+        subtaskInput.placeholder = 'Add a subtask...';
+        subtaskInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                addSubtask(task.id, subtaskInput.value);
+                subtaskInput.value = '';
+            }
+        });
+
+        subtaskWrapper.appendChild(subtaskInput);
+
+        subtaskSection.appendChild(subtaskWrapper);
+        li.appendChild(subtaskSection);
+    }
 
     return li;
 }
@@ -595,6 +794,15 @@ function toggleTask(taskId) {
 
     const task = tasks[taskIndex];
     task.completed = !task.completed;
+
+    if (task.completed && task.subtasks && task.subtasks.length > 0) {
+        task.subtasks.forEach(subtask => {
+            if (!subtask.completed) {
+                subtask.completed = true;
+                subtask.completedDate = new Date().toISOString();
+            }
+        });
+    }
 
     if (task.completed && task.recurrence?.enabled) {
         const isExpired = RecurrenceEngine.isExpired(task);
@@ -628,6 +836,15 @@ function deleteTask(taskId) {
             renderTasks();
         }, 300);
     }
+}
+
+function deleteSubtask(taskId, subtaskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task || !task.subtasks) return;
+
+    task.subtasks = task.subtasks.filter(s => s.id !== subtaskId);
+    saveTasks();
+    renderTasks();
 }
 
 function editTask(taskId) {
@@ -958,6 +1175,161 @@ style.textContent = `
             opacity: 0;
             transform: translateY(-10px);
         }
+    }
+    .subtask-toggle-btn {
+        background-color: transparent;
+        color: var(--text-muted);
+        border: none;
+        width: 3rem;
+        height: 2rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-size: 0.7rem;
+        font-weight: 600;
+        transition: all var(--transition-fast);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+.subtask-toggle-btn:hover {
+        background-color: #6693F5;
+        color: #fff;
+        box-shadow: 0 0 12px rgba(102, 147, 245, 0.5);
+    }
+    .subtask-toggle-btn.has-subtasks {
+        font-weight: 600;
+    }
+    .subtasks-section {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 4px;
+    }
+    .subtasks-list-wrapper {
+        overflow: hidden;
+        transition: max-height var(--transition-normal), opacity var(--transition-normal);
+        max-height: 500px;
+        opacity: 1;
+        padding: 8px;
+        background-color: var(--bg-secondary);
+        border-radius: var(--radius-sm);
+    }
+    .subtasks-list-wrapper.collapsed {
+        max-height: 0;
+        opacity: 0;
+        padding: 0 12px;
+    }
+    .subtask-list {
+        list-style: none;
+        padding-left: 0;
+        margin: 0 0 8px 0;
+    }
+    .subtask-item {
+        display: flex;
+        align-items: center;
+    }
+    .subtask-checkbox {
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        background-color: var(--bg-primary);
+        cursor: pointer;
+        position: relative;
+    }
+    .subtask-checkbox:checked {
+        background-color: var(--accent-primary);
+        border-color: var(--accent-primary);
+    }
+    .subtask-checkbox:checked::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 0.6rem;
+        font-weight: 700;
+    }
+    .subtask-item::before {
+        content: '↳';
+        color: var(--text-muted);
+        font-size: 1rem;
+        font-weight: 600;
+        padding-right: 4px;
+    }
+    .subtask-checkbox {
+        margin-right: 4px;
+    }
+    .subtask-text {
+        flex: 1;
+        font-size: 0.875rem;
+    }
+    .subtask-text.completed {
+        text-decoration: line-through;
+        color: var(--text-muted);
+    }
+    .subtask-edit {
+        background-color: transparent;
+        color: var(--text-muted);
+        border: none;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 600;
+        transition: all var(--transition-fast);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+    }
+    .task-item:hover .subtask-edit {
+        opacity: 1;
+    }
+    .subtask-edit:hover {
+        background-color: var(--accent-primary);
+        color: #fff;
+        box-shadow: 0 0 12px rgb(129 140 248 / 0.5);
+    }
+    .subtask-delete {
+        background-color: transparent;
+        color: var(--text-muted);
+        border: none;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all var(--transition-fast);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+    }
+    .task-item:hover .subtask-delete {
+        opacity: 1;
+    }
+    .subtask-delete:hover {
+        background-color: #ef4444;
+        color: #fff;
+        box-shadow: 0 0 12px rgb(239 68 68 / 0.5);
+    }
+    .subtask-input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-sm);
+        font-size: 0.875rem;
+        background-color: var(--bg-primary);
+        color: var(--text-primary);
+    }
+    .subtask-input:focus {
+        outline: none;
+        border-color: var(--accent-color);
     }
 `;
 document.head.appendChild(style);

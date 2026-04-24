@@ -46,6 +46,14 @@ Skeduel is a lightweight, browser-based task management application designed to 
   - **Time Slots** - Tasks grouped into Morning, Lunch, Afternoon, Late, and Unscheduled sessions
   - **Collapsible Notes** - Each task card has a collapsible notes section with 📝 Notes button
   - **Auto-Expanding Notes** - Notes textarea grows automatically as you type
+- ✅ **Subtasks** - Break down tasks into smaller subtasks
+  - **Toggle Button** - ☰ button in task actions toggles the subtask section
+  - **Subtask Count** - Shows "completed/total" count (e.g., "2/3") when subtasks exist
+  - **Add Subtask** - Input field to add new subtasks (press Enter to add)
+  - **Parent Completion** - Marking a parent task complete marks all subtasks complete (not vice versa)
+  - **Inline Editing** - Click edit button to edit subtask text inline
+  - **Delete Subtask** - Delete button removes subtask with red hover effect
+  - **Tree View** - Subtasks show a ↳ tree branch indicator on the left
 
 ## Demo
 
@@ -140,6 +148,12 @@ skeduel/
 27. **Drag to Time Slot**: Drag tasks between time slot sections to reorganize your day
 28. **Collapse Notes**: Click the 📝 Notes button on a focus card to collapse/expand the notes section
 29. **Note Indicator**: When a note exists, the Notes button shows in accent color so you can see it without expanding
+30. **View Subtasks**: Click the ☰ button in task actions to toggle the subtask section
+31. **Add Subtask**: In the expanded subtask section, type in the input field and press Enter to add a subtask
+32. **Complete Subtask**: Click the checkbox next to a subtask to mark it complete
+33. **Edit Subtask**: Click the edit (✎) button to edit a subtask's text inline
+34. **Delete Subtask**: Click the × button to delete a subtask
+35. **Parent Complete**: Marking a parent task complete also marks all its subtasks complete
 
 ## Storage
 

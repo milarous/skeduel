@@ -74,6 +74,11 @@ const RecurrenceEngine = {
 };
 
 function saveTasks() {
+    tasks.forEach(task => {
+        if (!task.subtasks) {
+            task.subtasks = [];
+        }
+    });
     Storage.save({ tasks, collapsedGroups, focusDays: Storage.getFocusDays() });
     if (typeof FocusDay !== 'undefined') FocusDay.render();
 }
