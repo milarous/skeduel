@@ -813,7 +813,14 @@ function toggleTask(taskId) {
                 ...task,
                 recurrence: { ...task.recurrence, currentInstance: newInstance }
             });
-            
+
+            if (task.subtasks && task.subtasks.length > 0) {
+                task.subtasks.forEach(subtask => {
+                    subtask.completed = false;
+                    subtask.completedDate = null;
+                });
+            }
+
             task.dueDate = nextDueDate;
             task.recurrence.currentInstance = newInstance;
             task.completed = false;

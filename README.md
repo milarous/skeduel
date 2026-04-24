@@ -51,6 +51,7 @@ Skeduel is a lightweight, browser-based task management application designed to 
   - **Subtask Count** - Shows "completed/total" count (e.g., "2/3") when subtasks exist
   - **Add Subtask** - Input field to add new subtasks (press Enter to add)
   - **Parent Completion** - Marking a parent task complete marks all subtasks complete (not vice versa)
+  - **Recurring Parent Reset** - When a recurring parent advances to next instance, all subtasks reset to incomplete
   - **Inline Editing** - Click edit button to edit subtask text inline
   - **Delete Subtask** - Delete button removes subtask with red hover effect
   - **Tree View** - Subtasks show a ↳ tree branch indicator on the left
@@ -154,6 +155,7 @@ skeduel/
 33. **Edit Subtask**: Click the edit (✎) button to edit a subtask's text inline
 34. **Delete Subtask**: Click the × button to delete a subtask
 35. **Parent Complete**: Marking a parent task complete also marks all its subtasks complete
+36. **Recurring Parent Reset**: When a recurring task advances to next instance, its subtasks all reset to incomplete
 
 ## Storage
 

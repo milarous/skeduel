@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Input field to add new subtasks (press Enter)
 - Subtask behaviors:
   - Parent task completion marks all subtasks complete (not vice versa)
+  - **Recurring parent advancement**: When a recurring parent advances to the next instance, all subtasks reset to incomplete with cleared completedDate
   - Subtask completion tracks completedDate timestamp
   - Toggle and delete subtask buttons with hover effects
   - Edit button opens inline input to edit subtask text
