@@ -31,6 +31,8 @@ Skeduel is a lightweight, browser-based task management application designed to 
 - ✅ **Task Counter** - Real-time count of remaining tasks
 - ✅ **Responsive Design** - Works seamlessly on desktop and mobile devices
 - ✅ **Local Storage** - Tasks persist across browser sessions
+- ✅ **Server Sync** - Tasks sync to server file (`skeduel-data.json`) in background
+- ✅ **Save Status** - Subtle indicator shows saving/saved/failed state in header
 - ✅ **Due Dates** - Optional due dates for tasks with calendar picker
 - ✅ **Edit Tasks** - Edit task text and due date by clicking the edit button
 - ✅ **Overdue Highlighting** - Tasks past due date are highlighted
@@ -61,7 +63,8 @@ skeduel/
     ├── css/
     │   └── styles.css     # Application styles
     └── js/
-        ├── data.js        # Data layer
+        ├── storage.js     # Storage module (server sync + localStorage cache)
+        ├── data.js        # Data layer (tasks, collapsedGroups, RecurrenceEngine)
         ├── focusDay.js    # Daily Focus module
         └── taskList.js    # Task list UI
 ```
@@ -140,7 +143,7 @@ skeduel/
 
 ## Storage
 
-> ⚠️ **Note**: Storage is currently migrating from browser localStorage to a local JSON file (`skeduel-data.json` via `/api/data`). This migration is under construction.
+Task data is stored in a local JSON file (`skeduel-data.json`) on the server, with browser localStorage as a cache for offline access. On first load after server restart, data is synced from the server to localStorage. All writes go to both the server and localStorage.
 
 ## Technologies
 

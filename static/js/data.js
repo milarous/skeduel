@@ -1,5 +1,5 @@
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-let collapsedGroups = JSON.parse(localStorage.getItem('collapsedGroups')) || {};
+let tasks = [];
+let collapsedGroups = {};
 
 const RecurrenceEngine = {
     calculateNextInstance(task) {
@@ -74,10 +74,10 @@ const RecurrenceEngine = {
 };
 
 function saveTasks() {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
+    Storage.save({ tasks, collapsedGroups, focusDays: Storage.getFocusDays() });
     if (typeof FocusDay !== 'undefined') FocusDay.render();
 }
 
 function saveCollapsedGroups() {
-    localStorage.setItem('collapsedGroups', JSON.stringify(collapsedGroups));
+    Storage.save({ tasks, collapsedGroups, focusDays: Storage.getFocusDays() });
 }

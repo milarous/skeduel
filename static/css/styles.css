@@ -508,6 +508,7 @@ body {
     margin-bottom: 2rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border-color);
+    position: relative;
 }
 
 .app-header > div {
@@ -519,6 +520,44 @@ body {
     font-weight: 700;
     color: var(--text-primary);
     letter-spacing: -0.025em;
+}
+
+/* Save Status Indicator */
+#save-status {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+#save-status .save-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+#save-status.save-status-saved .save-status-dot {
+    background-color: var(--success);
+}
+
+#save-status.save-status-saving .save-status-dot {
+    background-color: var(--text-muted);
+}
+
+#save-status.save-status-failed .save-status-dot {
+    background-color: var(--danger);
+}
+
+#save-status:not(.save-status-saved):not(.save-status-saving):not(.save-status-failed) {
+    display: none;
+}
     text-align: center;
 }
 
@@ -605,6 +644,44 @@ body {
 
 .modal-overlay.show-only-ok .modal-btn-confirm {
     display: none;
+}
+
+/* Loading Overlay */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    z-index: 9999;
+}
+
+#loading-overlay.loading-hidden {
+    display: none;
+}
+
+#loading-overlay p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--bg-tertiary);
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Input section */

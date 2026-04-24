@@ -8,15 +8,12 @@ const dueDateInput = document.getElementById('due-date-input');
 function getPinnedDates(taskId) {
     const dates = [];
     const taskIdStr = String(taskId);
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('focusDay-')) {
-            const focusDay = JSON.parse(localStorage.getItem(key));
-            const taskIds = focusDay?.taskIds?.map(id => String(id)) || [];
-            if (taskIds.includes(taskIdStr)) {
-                const dateStr = key.replace('focusDay-', '');
-                dates.push(dateStr);
-            }
+    const focusDays = Storage.getFocusDays();
+    for (const dateStr in focusDays) {
+        const focusDay = focusDays[dateStr];
+        const taskIds = focusDay?.taskIds?.map(id => String(id)) || [];
+        if (taskIds.includes(taskIdStr)) {
+            dates.push(dateStr);
         }
     }
     return dates.sort();
@@ -102,9 +99,16 @@ modalOverlay?.addEventListener('click', (e) => {
     }
 });
 
-function init() {
+async function init() {
     localStorage.removeItem('theme');
     localStorage.removeItem('sortingMode');
+
+    const data = await Storage.load();
+    tasks = data.tasks || [];
+    collapsedGroups = data.collapsedGroups || {};
+
+    document.getElementById('loading-overlay')?.classList.add('loading-hidden');
+
     renderTasks();
     setupEventListeners();
 
@@ -957,8 +961,6 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-
-document.addEventListener('DOMContentLoaded', init);
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

@@ -17,9 +17,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `templates/index.html` - HTML template with Jinja2 url_for() syntax
   - `static/css/` and `static/js/` - static assets
 - `skeduel-data.json` added to .gitignore
+- Loading overlay on app startup:
+  - Spinner with "Loading..." text
+  - Prevents flash of empty content while data loads
+- Storage module:
+  - Consolidated data structure: `{ tasks, collapsedGroups, focusDays }`
+  - `focusDays` stored as flat object keyed by date string (YYYY-MM-DD)
+  - Migration function converts legacy `focusDay-YYYY-MM-DD` localStorage keys to new format
+  - Migration runs once on first load, old keys cleaned up after merge
+- Save status indicator in app header:
+  - Shows "Saving...", "Saved" (with fade), or "Save failed" (persistent)
+  - Positioned absolutely in top-right, doesn't affect title alignment
 
 ### Changed
-- Storage migration note added to README
+- Storage migration note removed from README (migration complete)
+- Data loading is now async with proper startup sequence
 
 ### Fixed
 - N/A

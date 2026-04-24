@@ -12,19 +12,15 @@ const FocusDay = {
         unscheduled: 'Unscheduled'
     },
 
-    getKey(dateStr) {
-        return 'focusDay-' + dateStr;
-    },
-
     get(dateStr) {
-        const key = this.getKey(dateStr);
-        const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : null;
+        const focusDays = Storage.getFocusDays();
+        return focusDays[dateStr] || null;
     },
 
     save(dateStr, data) {
-        const key = this.getKey(dateStr);
-        localStorage.setItem(key, JSON.stringify(data));
+        const focusDays = Storage.getFocusDays();
+        focusDays[dateStr] = data;
+        Storage.save({ tasks, collapsedGroups, focusDays });
     },
 
     getOrCreate(dateStr) {
@@ -71,15 +67,14 @@ const FocusDay = {
 
     getOtherActivePinnedDates(taskId) {
         const dates = [];
-        const currentKey = this.getKey(this.currentFocusDate);
         const taskIdStr = String(taskId);
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('focusDay-') && key !== currentKey) {
-                const focusDay = JSON.parse(localStorage.getItem(key));
+        const focusDays = Storage.getFocusDays();
+        for (const dateStr in focusDays) {
+            if (dateStr !== this.currentFocusDate) {
+                const focusDay = focusDays[dateStr];
                 const taskIds = focusDay?.taskIds?.map(id => String(id)) || [];
                 if (taskIds.includes(taskIdStr)) {
-                    dates.push(key.replace('focusDay-', ''));
+                    dates.push(dateStr);
                 }
             }
         }
@@ -88,15 +83,14 @@ const FocusDay = {
 
     getOtherNoteDates(taskId) {
         const dates = [];
-        const currentKey = this.getKey(this.currentFocusDate);
         const taskIdStr = String(taskId);
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('focusDay-') && key !== currentKey) {
-                const focusDay = JSON.parse(localStorage.getItem(key));
+        const focusDays = Storage.getFocusDays();
+        for (const dateStr in focusDays) {
+            if (dateStr !== this.currentFocusDate) {
+                const focusDay = focusDays[dateStr];
                 const notes = focusDay?.notes || {};
                 if (notes[taskIdStr]) {
-                    dates.push(key.replace('focusDay-', ''));
+                    dates.push(dateStr);
                 }
             }
         }
