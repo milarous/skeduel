@@ -29,4 +29,4 @@ def save_data():
 
 
 if __name__ == '__main__':
-    app.run(debug=FLASK_DEBUG)
+    app.run(host='0.0.0.0', debug=FLASK_DEBUG)
