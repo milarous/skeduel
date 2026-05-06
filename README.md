@@ -104,7 +104,12 @@ skeduel/
    cd skeduel
    ```
 
-3. Build and start the container:
+3. Copy the environment variables file:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Build and start the container:
    ```bash
    docker compose up -d --build
    ```
@@ -125,11 +130,16 @@ skeduel/
    ```
 
 2. Navigate to the project directory:
-   ```bash
-   cd skeduel
-   ```
+    ```bash
+    cd skeduel
+    ```
 
-3. Create and activate a virtual environment:
+ 3. Copy the environment variables file:
+    ```bash
+    cp .env.example .env
+    ```
+
+ 4. Create and activate a virtual environment:
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # Linux/macOS
