@@ -31,7 +31,7 @@ Skeduel is a lightweight, browser-based task management application designed to 
 - ✅ **Task Counter** - Real-time count of remaining tasks
 - ✅ **Responsive Design** - Works seamlessly on desktop and mobile devices
 - ✅ **Local Storage** - Tasks persist across browser sessions
-- ✅ **Server Sync** - Tasks sync to server file (`skeduel-data.json`) in background
+- ✅ **Server Sync** - Tasks sync to server file (`data/skeduel-data.json`) in background
 - ✅ **Save Status** - Subtle indicator shows saving/saved/failed state in header
 - ✅ **Due Dates** - Optional due dates for tasks with calendar picker
 - ✅ **Edit Tasks** - Edit task text and due date by clicking the edit button
@@ -65,7 +65,12 @@ Run the Flask server and open `http://localhost:5000` in your browser.
 ```
 skeduel/
 ├── server.py              # Flask application
-├── skeduel-data.json      # Task data storage (gitignored)
+├── Dockerfile            # Docker container definition
+├── docker-compose.yml   # Docker Compose configuration
+├── .env                 # Environment variables (gitignored)
+├── update.sh            # Update script (run after git pull)
+├── data/                # Data directory
+│   └── skeduel-data.json  # Task data storage (gitignored)
 ├── templates/
 │   └── index.html         # Main HTML template
 └── static/
@@ -73,19 +78,46 @@ skeduel/
     │   └── styles.css     # Application styles
     └── js/
         ├── storage.js     # Storage module (server sync + localStorage cache)
-        ├── data.js        # Data layer (tasks, collapsedGroups, RecurrenceEngine)
-        ├── focusDay.js    # Daily Focus module
-        └── taskList.js    # Task list UI
+        ├── data.js       # Data layer (tasks, collapsedGroups, RecurrenceEngine)
+        ├── focusDay.js   # Daily Focus module
+        └── taskList.js   # Task list UI
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.8+
-- Flask (see requirements.txt)
+- Docker and Docker Compose (recommended)
+- Python 3.8+ (alternate for local development)
 
 ### Installation
+
+#### Docker Installation (Recommended)
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/milarous/skeduel.git
+   ```
+
+2. Navigate to the project directory:
+   ```bash
+   cd skeduel
+   ```
+
+3. Build and start the container:
+   ```bash
+   docker compose up -d --build
+   ```
+
+4. Open http://localhost:5001 in your browser
+
+**Data Persistence**: The `data/` directory is bind-mounted to the container. Your data file (`data/skeduel-data.json`) is stored directly on your host machine.
+
+**Updating**: Run `./update.sh` to pull latest code and rebuild the container.
+
+**Managing Data**: Data file is at `data/skeduel-data.json` - you can view, back it up, or edit it directly without going through Docker.
+
+#### Local Development (Alternate)
 
 1. Clone the repository:
    ```bash
@@ -116,7 +148,7 @@ skeduel/
    python server.py
    ```
 
-6. Open http://localhost:5000 in your browser
+6. Open http://localhost:5001 in your browser
 
 ## Usage
 
@@ -159,11 +191,12 @@ skeduel/
 
 ## Storage
 
-Task data is stored in a local JSON file (`skeduel-data.json`) on the server, with browser localStorage as a cache for offline access. On first load after server restart, data is synced from the server to localStorage. All writes go to both the server and localStorage.
+Task data is stored in a local JSON file (`data/skeduel-data.json`) on the server, with browser localStorage as a cache for offline access. On first load after server restart, data is synced from the server to localStorage. All writes go to both the server and localStorage.
 
 ## Technologies
 
 - **Python** - Flask web framework
+- **Docker** - Container deployment
 - **HTML5** - Semantic markup structure
 - **CSS3** - Modern styling with CSS variables for theming
 - **JavaScript (ES6+)** - Dynamic functionality

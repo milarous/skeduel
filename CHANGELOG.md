@@ -71,7 +71,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Data loading is now async with proper startup sequence
 
 ### Fixed
-- N/A
+- Drag to Daily Focus confirmation modal now appears when task is already pinned elsewhere
+- Drop handler now properly finds target on first drag (multiple fallback strategies)
+- Note transfer now preserves empty notes when moving tasks between days
+- Docker infrastructure added (Dockerfile, docker-compose.yml, .env, update.sh)
+- Data file moved to data/ directory (data/skeduel-data.json)
+- FLASK_DEBUG environment variable support in server.py
 
 ### Deprecated
 - N/A
