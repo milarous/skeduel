@@ -169,7 +169,19 @@ const FocusDay = {
         slotsContainer.addEventListener('drop', (e) => {
             e.preventDefault();
             const taskId = e.dataTransfer.getData('text/plain');
-            const list = e.target.closest('.focus-task-list');
+            if (!taskId) return;
+
+            let list = e.target.closest('.focus-task-list');
+            const slotContainer = e.target.closest('.time-slot-section');
+
+            if (!list && slotContainer) {
+                list = slotContainer.querySelector('.focus-task-list');
+            }
+
+            if (!list && e.target.classList.contains('focus-task-list')) {
+                list = e.target;
+            }
+
             if (list && taskId) {
                 list.classList.remove('drag-over');
                 const slot = list.dataset.slot;
@@ -330,23 +342,25 @@ const FocusDay = {
         if (!focusDay.taskIds.includes(taskIdStr)) {
             const otherDates = this.getOtherActivePinnedDates(taskId);
             if (otherDates.length > 0) {
-                this.moveTaskToCurrentDate(taskId, otherDates[0]);
-                if (!focusDay.timeSlots) focusDay.timeSlots = {};
-                focusDay.timeSlots[taskIdStr] = slot;
-                this.save(this.currentFocusDate, focusDay);
-                this.render();
-                this.triggerDataChange();
+                const fromDate = this.formatDate(otherDates[0]);
+                showConfirmModal(
+                    `This task is already pinned to ${fromDate}. Move it to today?`,
+                    () => {
+                        this.moveAndAddToSlot(taskId, slot, otherDates[0]);
+                    }
+                );
                 return;
             }
 
             const otherNoteDates = this.getOtherNoteDates(taskId);
             if (otherNoteDates.length > 0) {
-                this.moveTaskToCurrentDate(taskId, otherNoteDates[0]);
-                if (!focusDay.timeSlots) focusDay.timeSlots = {};
-                focusDay.timeSlots[taskIdStr] = slot;
-                this.save(this.currentFocusDate, focusDay);
-                this.render();
-                this.triggerDataChange();
+                const fromDate = this.formatDate(otherNoteDates[0]);
+                showConfirmModal(
+                    `This task has a note on ${fromDate}. Move it to today?`,
+                    () => {
+                        this.moveAndAddToSlot(taskId, slot, otherNoteDates[0]);
+                    }
+                );
                 return;
             }
 
@@ -356,6 +370,39 @@ const FocusDay = {
         if (!focusDay.timeSlots) focusDay.timeSlots = {};
         focusDay.timeSlots[taskIdStr] = slot;
         this.save(this.currentFocusDate, focusDay);
+        this.render();
+        this.triggerDataChange();
+    },
+
+    moveAndAddToSlot(taskId, slot, fromDateStr) {
+        const taskIdStr = String(taskId);
+        const fromFocus = this.get(fromDateStr);
+        const note = fromFocus?.notes?.[taskIdStr] || '';
+        const timeSlot = fromFocus?.timeSlots?.[taskIdStr] || 'unscheduled';
+
+        if (fromFocus && fromFocus.taskIds) {
+            fromFocus.taskIds = fromFocus.taskIds.filter(id => String(id) !== taskIdStr);
+            if (note && fromFocus.notes) {
+                delete fromFocus.notes[taskIdStr];
+            }
+            if (fromFocus.timeSlots) {
+                delete fromFocus.timeSlots[taskIdStr];
+            }
+            this.save(fromDateStr, fromFocus);
+        }
+
+        const toFocus = this.getOrCreate(this.currentFocusDate);
+        if (!toFocus.taskIds.includes(taskIdStr)) {
+            toFocus.taskIds.push(taskIdStr);
+        }
+        if (note || (fromFocus?.notes && taskIdStr in fromFocus.notes)) {
+            if (!toFocus.notes) toFocus.notes = {};
+            toFocus.notes[taskIdStr] = note;
+        }
+        if (!toFocus.timeSlots) toFocus.timeSlots = {};
+        toFocus.timeSlots[taskIdStr] = slot;
+
+        this.save(this.currentFocusDate, toFocus);
         this.render();
         this.triggerDataChange();
     },
@@ -386,14 +433,26 @@ const FocusDay = {
         const otherNoteDates = this.getOtherNoteDates(taskId);
 
         if (existingActiveDates.length > 0) {
-            this.moveTaskToCurrentDate(taskId, existingActiveDates[0]);
-            this.setTimeSlot(taskId, 'unscheduled');
+            const fromDate = this.formatDate(existingActiveDates[0]);
+            showConfirmModal(
+                `This task is already pinned to ${fromDate}. Move it to today?`,
+                () => {
+                    this.moveTaskToCurrentDate(taskId, existingActiveDates[0]);
+                    this.setTimeSlot(taskId, 'unscheduled');
+                }
+            );
             return;
         }
 
         if (otherNoteDates.length > 0 && existingActiveDates.length === 0) {
-            this.moveTaskToCurrentDate(taskId, otherNoteDates[0]);
-            this.setTimeSlot(taskId, 'unscheduled');
+            const fromDate = this.formatDate(otherNoteDates[0]);
+            showConfirmModal(
+                `This task has a note on ${fromDate}. Move it to today?`,
+                () => {
+                    this.moveTaskToCurrentDate(taskId, otherNoteDates[0]);
+                    this.setTimeSlot(taskId, 'unscheduled');
+                }
+            );
             return;
         }
 
@@ -428,7 +487,7 @@ moveTaskToCurrentDate(taskId, fromDateStr) {
         const toFocus = this.getOrCreate(this.currentFocusDate);
         if (!toFocus.taskIds.includes(taskIdStr)) {
             toFocus.taskIds.push(taskIdStr);
-            if (note) {
+            if (note || (fromFocus?.notes && taskIdStr in fromFocus.notes)) {
                 if (!toFocus.notes) toFocus.notes = {};
                 toFocus.notes[taskIdStr] = note;
             }
@@ -468,7 +527,7 @@ moveTaskToCurrentDate(taskId, fromDateStr) {
         const toTaskIdsStr = toFocus.taskIds.map(id => String(id));
         if (!toTaskIdsStr.includes(taskIdStr)) {
             toFocus.taskIds.push(taskIdStr);
-            if (note) {
+            if (note || (fromFocus?.notes && taskIdStr in fromFocus.notes)) {
                 if (!toFocus.notes) toFocus.notes = {};
                 toFocus.notes[taskIdStr] = note;
             }
