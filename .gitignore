@@ -47,8 +47,8 @@ coverage/
 .cache/
 .parcel-cache/
 
-# Local data
-skeduel-data.json
+# Local data directory (contents only, keep folder)
+data/*
 
 # Temporary files
 tmp/

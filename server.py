@@ -3,7 +3,9 @@ import json
 import os
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-DATA_FILE = 'skeduel-data.json'
+DATA_FILE = 'data/skeduel-data.json'
+
+FLASK_DEBUG = os.environ.get('FLASK_DEBUG', 'false').lower() == 'true'
 
 
 @app.route('/')
@@ -27,4 +29,4 @@ def save_data():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=FLASK_DEBUG)
