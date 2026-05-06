@@ -48,7 +48,8 @@ coverage/
 .parcel-cache/
 
 # Local data directory (contents only, keep folder)
-data/*
+data/
+!data/.gitkeep
 
 # Temporary files
 tmp/
