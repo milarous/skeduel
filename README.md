@@ -46,6 +46,9 @@ Skeduel is a lightweight, browser-based task management application designed to 
   - **Time Slots** - Tasks grouped into Morning, Lunch, Afternoon, Late, and Unscheduled sessions
   - **Collapsible Notes** - Each task card has a collapsible notes section with 📝 Notes button
   - **Auto-Expanding Notes** - Notes textarea grows automatically as you type
+   - **Note:** Recurrence calculations treat date-only values as local dates to avoid
+      timezone-related off-by-one errors. The recurrence engine now uses local
+      parsing/formatting (`YYYY-MM-DD`) and includes unit tests to verify behavior.
 - ✅ **Subtasks** - Break down tasks into smaller subtasks
   - **Toggle Button** - ☰ button in task actions toggles the subtask section
   - **Subtask Count** - Shows "completed/total" count (e.g., "2/3") when subtasks exist

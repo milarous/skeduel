@@ -221,6 +221,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Task card styling issues - added proper CSS class structure (title-row, title-wrapper)
 - Due date display in focus cards - formatted to match task list style (e.g., "Apr 21")
 
+- Recurrence timezone bug: fixed off-by-one day for recurring tasks caused by
+  converting date-only strings to UTC via `toISOString()`; recurrence dates are
+  now parsed/serialized as local `YYYY-MM-DD` (added `parseLocalDate` and
+  `formatLocalDate` helpers). Added unit tests to validate daily/weekly/monthly/
+  yearly advances and edge cases.
+
 ## [1.3.0] - 2026-04-17
 
 ### Added

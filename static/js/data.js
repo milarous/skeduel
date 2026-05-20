@@ -4,10 +4,31 @@ let collapsedGroups = {};
 const RecurrenceEngine = {
     calculateNextInstance(task) {
         if (!task.recurrence || !task.recurrence.enabled) return null;
-        const { frequency, interval, startDate, currentInstance } = task.recurrence;
-        const baseDate = new Date(startDate || task.dueDate || task.createdAt);
-        baseDate.setHours(0, 0, 0, 0);
+        const { frequency, interval = 1, startDate, currentInstance } = task.recurrence;
         const instance = currentInstance || 1;
+
+        const parseLocalDate = (dateStr) => {
+            if (!dateStr) return null;
+            const isoDateMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+            if (isoDateMatch) {
+                const [y, m, d] = dateStr.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            }
+            const d = new Date(dateStr);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        };
+
+        const formatLocalDate = (dateObj) => {
+            const y = dateObj.getFullYear();
+            const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const d = String(dateObj.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
+
+        const baseDate = parseLocalDate(startDate || task.dueDate || task.createdAt);
+        if (!baseDate) return null;
+
         switch (frequency) {
             case 'daily':
                 baseDate.setDate(baseDate.getDate() + (interval * (instance - 1)));
@@ -22,16 +43,29 @@ const RecurrenceEngine = {
                 baseDate.setFullYear(baseDate.getFullYear() + (interval * (instance - 1)));
                 break;
         }
-        return baseDate.toISOString().split('T')[0];
+
+        return formatLocalDate(baseDate);
     },
     isExpired(task) {
         if (!task.recurrence || !task.recurrence.enabled) return false;
         const { expiryType, expiryDate, expiryCount, currentInstance } = task.recurrence;
+        const parseLocalDate = (dateStr) => {
+            if (!dateStr) return null;
+            const isoDateMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
+            if (isoDateMatch) {
+                const [y, m, d] = dateStr.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            }
+            const d = new Date(dateStr);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        };
+
         if (expiryType === 'date') {
             if (!expiryDate) return false;
             const nextInstance = currentInstance + 1;
-            const baseDate = new Date(task.recurrence.startDate || task.dueDate || task.createdAt);
-            baseDate.setHours(0, 0, 0, 0);
+            const baseDate = parseLocalDate(task.recurrence.startDate || task.dueDate || task.createdAt);
+            if (!baseDate) return false;
             switch (task.recurrence.frequency) {
                 case 'daily':
                     baseDate.setDate(baseDate.getDate() + (task.recurrence.interval * (nextInstance - 1)));
@@ -46,8 +80,13 @@ const RecurrenceEngine = {
                     baseDate.setFullYear(baseDate.getFullYear() + (task.recurrence.interval * (nextInstance - 1)));
                     break;
             }
-            const nextDate = baseDate.toISOString().split('T')[0];
-            return nextDate > expiryDate;
+            const nextDateStr = (() => {
+                const y = baseDate.getFullYear();
+                const m = String(baseDate.getMonth() + 1).padStart(2, '0');
+                const d = String(baseDate.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            })();
+            return nextDateStr > expiryDate;
         }
         if (expiryType === 'count') {
             return (currentInstance + 1) >= expiryCount;
